@@ -47,10 +47,19 @@ This is a pnpm workspace monorepo.
   runtime, DOM, or framework dependencies and is fully unit tested.
 - `packages/node` — Node.js filesystem loader (`@mapre/node`) that assembles a
   deck from a `slides/` folder.
+- `packages/runtime` — presentation runtime (`@mapre/runtime`). It builds a
+  **self-contained, single-file HTML** presentation: the raw deck markdown and a
+  bundled browser client (parser + renderer) are inlined, and the deck is
+  **rendered in the browser at runtime** — the same path a hosted web app uses.
+  This keeps one rendering path across all deploy targets: a hosted web server,
+  a local `python3 -m http.server`, or a plain `file://` open.
 - `examples/basic-presentation` — a runnable example showing how to author your
   own presentation from markdown files.
-- Additional packages (presentation/presenter runtime) will live under
-  `packages/` as they are built.
+- `examples/single-file` — a runnable example that builds a single-file HTML
+  presentation with `@mapre/runtime`.
+- Additional packages (presenter view, window sync, timer, channels) will live
+  under `packages/` as they are built, following the
+  [runtime spec](spec/runtime.spec.md).
 
 ## Slides folder
 

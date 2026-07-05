@@ -1,0 +1,20 @@
+{
+  "name": "@mapre/example-single-file",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Example: build a self-contained single-file HTML presentation with mapre",
+  "scripts": {
+    "build": "tsx generate.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mapre/node": "workspace:*",
+    "@mapre/runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

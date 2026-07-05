@@ -1,2 +1,2 @@
 export { collectMarkdownFiles } from './collectMarkdownFiles';
-export { loadDeck } from './loadDeck';
+export { loadDeck, loadDeckSource } from './loadDeck';
