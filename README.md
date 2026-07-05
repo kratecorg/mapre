@@ -38,6 +38,85 @@ Typical responsibilities include:
 - Keep the runtime flexible enough for different presentation surfaces
 - Favor clear module boundaries over a single large monolith
 
+## Repository layout
+
+This is a pnpm workspace monorepo.
+
+- `packages/core` — framework-agnostic markdown parser and slide model. It turns
+  markdown into a structured `Deck` and can render slides to HTML. It has no
+  runtime, DOM, or framework dependencies and is fully unit tested.
+- `packages/node` — Node.js filesystem loader (`@mapre/node`) that assembles a
+  deck from a `slides/` folder.
+- `examples/basic-presentation` — a runnable example showing how to author your
+  own presentation from markdown files.
+- Additional packages (presentation/presenter runtime) will live under
+  `packages/` as they are built.
+
+## Slides folder
+
+`@mapre/node`'s `loadDeck(directory)` reads a slides folder in presentation
+order:
+
+- entries are sorted **alphabetically** at every directory level;
+- **files and directories are equivalent** while sorting, so a folder named
+  `02topics/` sorts between `01.md` and `03.md`;
+- directories are entered recursively;
+- non-markdown files and dot-entries are ignored.
+
+```text
+slides/
+  01.md
+  02topics/
+    01-a.md
+    02-b.md
+  03.md
+```
+
+
+## Slide syntax
+
+The `@mapre/core` parser understands a small, reveal.js-inspired markdown dialect:
+
+- **Deck front matter**: an optional leading block delimited by `---` fences,
+  containing `key: value` pairs (e.g. `title: My Talk`).
+- **Slide separators**: a standalone `---` line splits slides. Separators inside
+  fenced code blocks are ignored.
+- **Speaker notes**: everything after a `???` line on a slide becomes notes.
+- **Slide metadata / layout hints**: leading `<!-- key: value -->` directive
+  comments, e.g. `<!-- layout: center -->` or `<!-- aspect: 16:9 -->`.
+- **Progressive-reveal fragments**: `@N ... @N` marker pairs reveal content at
+  step `N`, both in prose and inside code fences.
+
+```markdown
+---
+title: Demo
+---
+
+<!-- layout: center -->
+# Hello
+
+@1
+- revealed second
+@1
+
+???
+Speaker notes for this slide.
+```
+
+## Development
+
+Requires Node 20+ and pnpm.
+
+```bash
+pnpm install       # install workspace dependencies
+pnpm test          # run all package tests
+pnpm type-check    # type-check all packages
+pnpm build         # build all packages
+```
+
+Continuous integration runs type-check, tests, and build via Gitea Actions
+(`.gitea/workflows/ci.yml`).
+
 ## Status
 
 This repository is intended to become the dedicated foundation for the presentation stack. The README will be refined as the module split and implementation details settle.

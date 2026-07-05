@@ -1,0 +1,20 @@
+{
+  "name": "@mapre/example-basic-presentation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Example: how to author your own presentation with mapre",
+  "scripts": {
+    "build": "tsx generate.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mapre/core": "workspace:*",
+    "@mapre/node": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

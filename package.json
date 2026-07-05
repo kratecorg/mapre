@@ -1,0 +1,19 @@
+{
+  "name": "mapre",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reusable foundation for markdown-driven slides and presentation experiences",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "type-check": "pnpm -r type-check"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

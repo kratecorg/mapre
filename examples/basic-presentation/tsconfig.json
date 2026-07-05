@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@mapre/core": ["../../packages/core/src/index.ts"],
+      "@mapre/node": ["../../packages/node/src/index.ts"]
+    }
+  },
+  "include": ["*.ts"]
+}

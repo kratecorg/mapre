@@ -1,0 +1,36 @@
+{
+  "name": "@mapre/core",
+  "version": "0.0.0",
+  "description": "Framework-agnostic markdown parser and slide model for the mapre presentation stack",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "marked": "^17.0.1",
+    "prismjs": "^1.29.0"
+  },
+  "devDependencies": {
+    "@types/prismjs": "^1.26.5",
+    "typescript": "^5.9.3",
+    "vite": "^7.0.0",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.0.18"
+  }
+}
