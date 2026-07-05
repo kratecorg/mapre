@@ -40,16 +40,7 @@ export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): st
   <style>${styles}</style>
 </head>
 <body>
-  <main id="stage" aria-live="polite"></main>
-  <footer class="bar">
-    <button id="prev" type="button" aria-label="Previous">&#9664;</button>
-    <span id="counter"></span>
-    <button id="next" type="button" aria-label="Next">&#9654;</button>
-    <label class="zoom">
-      Size
-      <input id="zoom" type="range" min="1" max="4" step="0.1" value="1.6" />
-    </label>
-  </footer>
+  <div id="app"></div>
   <script id="mapre-source" type="application/json">${source}</script>
   <script>${clientScript}</script>
 </body>

@@ -107,6 +107,26 @@ export class Navigation {
     return true;
   }
 
+  /**
+   * Moves directly to an explicit position, clamping the step to the target
+   * slide's range. Used to apply state received from another window. Returns
+   * whether the position changed.
+   */
+  goTo(slideIndex: number, stepIndex: number): boolean {
+    if (slideIndex < 0 || slideIndex >= this.stepCounts.length) {
+      return false;
+    }
+
+    const clampedStep = clamp(stepIndex, 0, this.lastStepOf(slideIndex));
+    if (slideIndex === this.currentSlide && clampedStep === this.currentStep) {
+      return false;
+    }
+
+    this.currentSlide = slideIndex;
+    this.currentStep = clampedStep;
+    return true;
+  }
+
   private lastStepOf(slideIndex: number): number {
     return this.stepCounts[slideIndex] - 1;
   }

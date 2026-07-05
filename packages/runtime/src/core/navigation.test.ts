@@ -82,4 +82,19 @@ describe('Navigation', () => {
     expect(nav.slideIndex).toBe(1);
     expect(nav.stepIndex).toBe(1);
   });
+
+  it('goTo moves to an explicit position and clamps the step', () => {
+    const nav = new Navigation([3, 2]);
+
+    expect(nav.goTo(1, 5)).toBe(true);
+    expect(nav.slideIndex).toBe(1);
+    expect(nav.stepIndex).toBe(1);
+  });
+
+  it('goTo ignores an out-of-range slide or a redundant move', () => {
+    const nav = new Navigation([3, 2]);
+
+    expect(nav.goTo(9, 0)).toBe(false);
+    expect(nav.goTo(0, 0)).toBe(false);
+  });
 });
