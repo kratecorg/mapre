@@ -63,6 +63,17 @@ export const STYLES = `
     background: #1e293b;
   }
   .zoom { display: flex; align-items: center; gap: 0.5rem; }
+  .zoom-control { display: flex; align-items: center; gap: 0.4rem; }
+  .zoom-step {
+    padding: 0.2em 0.55em;
+    line-height: 1;
+    font-size: 1rem;
+  }
+  .zoom-value {
+    min-width: 3rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
   .channel-label {
     color: #94a3b8;
     font-size: 0.85rem;
@@ -97,6 +108,20 @@ export const STYLES = `
     min-height: 0;
   }
   .pv-next, .pv-notes { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+  .pv-windows { display: flex; flex-direction: column; min-height: 0; }
+  #pv-windows { display: flex; flex-direction: column; gap: 0.4rem; overflow: auto; }
+  .pv-window {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    background: #1e293b;
+    border-radius: 0.4rem;
+    padding: 0.4rem 0.6rem;
+  }
+  .pv-window-label { flex: 1; min-width: 4rem; color: #cbd5e1; }
+  .pv-window button { padding: 0.25em 0.6em; font-size: 0.85rem; }
+  .pv-empty { color: #64748b; font-size: 0.85rem; }
   .pv-current > .slide { font-size: calc(var(--pv-scale, 1.3) * 1rem); }
   .pv-next > .slide { font-size: 0.8rem; }
   .pv-notes > div { white-space: pre-wrap; }

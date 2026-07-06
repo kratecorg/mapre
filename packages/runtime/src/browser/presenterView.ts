@@ -1,10 +1,12 @@
 import { renderSlide } from '@mapre/core';
 import { Timer } from '../core/timer';
 import { formatDuration } from '../core/format';
-import type { Controller } from './controller';
+import type { Controller, ManagedWindow } from './controller';
 import { query } from './dom';
+import { createZoomControl, DEFAULT_SCALE } from './zoomControl';
 
 const TIMER_TICK_MS = 250;
+const WINDOWS_TICK_MS = 1000;
 
 const TEMPLATE = `
   <div class="presenter">
@@ -20,6 +22,11 @@ const TEMPLATE = `
       <section class="pv-notes">
         <div class="pv-label">Notes</div>
         <div id="pv-notes"></div>
+      </section>
+      <section class="pv-windows">
+        <div class="pv-label">Windows</div>
+        <div id="pv-windows"></div>
+        <div id="pv-windows-empty" class="pv-empty">No open windows</div>
       </section>
     </aside>
     <footer class="pv-bar">
@@ -107,15 +114,98 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
 
   mountChannelButtons(query(root, '#pv-channels'), controller);
 
+  const windows = mountWindowList(
+    query(root, '#pv-windows'),
+    query(root, '#pv-windows-empty'),
+    controller,
+  );
+
   const unsubscribe = controller.onChange(renderPreview);
   renderPreview();
   renderTimer();
   const intervalId = window.setInterval(renderTimer, TIMER_TICK_MS);
+  const windowsIntervalId = window.setInterval(windows.refresh, WINDOWS_TICK_MS);
 
   return () => {
     unsubscribe();
+    windows.dispose();
     window.clearInterval(intervalId);
+    window.clearInterval(windowsIntervalId);
   };
+}
+
+/**
+ * Renders the list of open windows, adding and removing rows as windows open and
+ * close so that in-progress input (e.g. a typed size) is never clobbered. Each
+ * row can resize, focus, or close its window.
+ */
+function mountWindowList(
+  container: HTMLElement,
+  emptyLabel: HTMLElement,
+  controller: Controller,
+): { refresh: () => void; dispose: () => void } {
+  const rows = new Map<Window, HTMLElement>();
+
+  function refresh(): void {
+    const managed = controller.listWindows();
+    const live = new Set(managed.map((entry) => entry.window));
+
+    for (const [win, row] of rows) {
+      if (!live.has(win)) {
+        row.remove();
+        rows.delete(win);
+      }
+    }
+
+    for (const entry of managed) {
+      if (!rows.has(entry.window)) {
+        const row = createWindowRow(entry, controller, refresh);
+        rows.set(entry.window, row);
+        container.appendChild(row);
+      }
+    }
+
+    emptyLabel.style.display = managed.length === 0 ? '' : 'none';
+  }
+
+  const unsubscribe = controller.onWindowsChange(refresh);
+  refresh();
+
+  return { refresh, dispose: unsubscribe };
+}
+
+function createWindowRow(
+  entry: ManagedWindow,
+  controller: Controller,
+  onChange: () => void,
+): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'pv-window';
+
+  const label = document.createElement('span');
+  label.className = 'pv-window-label';
+  label.textContent = entry.label;
+
+  const zoom = createZoomControl(DEFAULT_SCALE, (value) => {
+    controller.zoomWindow(entry.window, value);
+  });
+
+  const focus = actionButton('Focus', () => entry.window.focus());
+  const close = actionButton('Close', () => {
+    entry.window.close();
+    onChange();
+  });
+
+  row.append(label, zoom, focus, close);
+  return row;
+}
+
+function actionButton(text: string, onClick: () => void): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = text;
+  button.addEventListener('click', onClick);
+  return button;
 }
 
 /**

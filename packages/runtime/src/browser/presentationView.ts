@@ -1,6 +1,7 @@
 import { renderSlide } from '@mapre/core';
 import type { Controller } from './controller';
 import { query, toggleFullscreen } from './dom';
+import { createZoomControl, DEFAULT_SCALE } from './zoomControl';
 
 /**
  * Options for {@link mountPresentationView}.
@@ -25,9 +26,7 @@ const CONTROL_BAR = `
     <span id="channel-label" class="channel-label"></span>
     <button id="open-presenter" type="button">Presenter</button>
     <button id="fullscreen" type="button" aria-label="Fullscreen">&#9974;</button>
-    <label class="zoom">Size
-      <input id="zoom" type="range" min="1" max="4" step="0.1" value="1.6" />
-    </label>
+    <span id="zoom" class="zoom"></span>
   </footer>`;
 
 /**
@@ -82,8 +81,6 @@ function wireControlBar(
   channel: string,
   onOpenPresenter: () => void,
 ): void {
-  const zoom = query<HTMLInputElement>(root, '#zoom');
-
   if (controller.channels.length > 1) {
     query(root, '#channel-label').textContent = channel;
   }
@@ -92,7 +89,9 @@ function wireControlBar(
   query(root, '#prev').addEventListener('click', () => controller.previous());
   query(root, '#open-presenter').addEventListener('click', onOpenPresenter);
   query(root, '#fullscreen').addEventListener('click', toggleFullscreen);
-  zoom.addEventListener('input', () => {
-    document.documentElement.style.setProperty('--scale', zoom.value);
-  });
+  query(root, '#zoom').appendChild(
+    createZoomControl(DEFAULT_SCALE, (value) => {
+      document.documentElement.style.setProperty('--scale', String(value));
+    }),
+  );
 }

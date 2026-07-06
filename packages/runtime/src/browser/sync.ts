@@ -15,20 +15,24 @@ const MESSAGE_TAG = '__mapre_sync';
  * - `state` carries the current navigation position.
  * - `request-state` asks other windows to reply with their current `state`,
  *   which is how a freshly opened window catches up.
+ * - `zoom` sets the receiving window's content scale.
  */
 export interface SyncMessage {
-  kind: 'state' | 'request-state';
+  kind: 'state' | 'request-state' | 'zoom';
   slideIndex?: number;
   stepIndex?: number;
+  value?: number;
 }
 
 /**
  * A channel that broadcasts messages to the opener and to any registered child
- * windows, and delivers incoming messages to a handler.
+ * windows, delivers incoming messages to a handler, and can post to a single
+ * target window.
  */
 export interface Sync {
   broadcast(message: SyncMessage): void;
   register(window: Window): void;
+  postTo(target: Window, message: SyncMessage): void;
 }
 
 interface TaggedMessage extends SyncMessage {
@@ -47,7 +51,12 @@ export function createSync(handler: (message: SyncMessage) => void): Sync {
       return;
     }
 
-    handler({ kind: data.kind, slideIndex: data.slideIndex, stepIndex: data.stepIndex });
+    handler({
+      kind: data.kind,
+      slideIndex: data.slideIndex,
+      stepIndex: data.stepIndex,
+      value: data.value,
+    });
   });
 
   function broadcast(message: SyncMessage): void {
@@ -70,7 +79,11 @@ export function createSync(handler: (message: SyncMessage) => void): Sync {
     children.add(target);
   }
 
-  return { broadcast, register };
+  function postTo(target: Window, message: SyncMessage): void {
+    safePost(target, { [MESSAGE_TAG]: true, ...message });
+  }
+
+  return { broadcast, register, postTo };
 }
 
 function safePost(target: Window, message: TaggedMessage): void {
