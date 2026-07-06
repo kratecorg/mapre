@@ -1,4 +1,5 @@
 import type { Deck } from '@mapre/core';
+import { DEFAULT_CHANNEL } from '@mapre/core';
 import { Navigation } from '../core/navigation';
 import { createSync } from './sync';
 import type { SyncMessage } from './sync';
@@ -17,21 +18,23 @@ export type Role = 'presentation' | 'presenter';
 export interface Controller {
   readonly deck: Deck;
   readonly navigation: Navigation;
-  /** Distinct channel names across the deck, sorted alphabetically. */
+  /** Channel names with the deck's default channel first, the rest sorted. */
   readonly channels: string[];
   next(): void;
   previous(): void;
   goToSlide(index: number): void;
   first(): void;
   last(): void;
-  onChange(listener: () => void): void;
+  /** Subscribes to position changes; returns an unsubscribe function. */
+  onChange(listener: () => void): () => void;
   openWindow(role: Role, channel?: string): void;
 }
 
 export function createController(deck: Deck): Controller {
   const navigation = new Navigation(deck.slides.map((slide) => slide.fragmentCount + 1));
   const slideCount = deck.slides.length;
-  const channels = collectChannels(deck);
+  const defaultChannel = deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
+  const channels = collectChannels(deck, defaultChannel);
   const listeners: Array<() => void> = [];
 
   const sync = createSync(handleMessage);
@@ -95,11 +98,20 @@ export function createController(deck: Deck): Controller {
     last: () => go(() => navigation.goToSlide(slideCount - 1)),
     onChange: (listener: () => void) => {
       listeners.push(listener);
+      return () => {
+        const position = listeners.indexOf(listener);
+        if (position >= 0) {
+          listeners.splice(position, 1);
+        }
+      };
     },
     openWindow: (role: Role, channel?: string) => {
       const url = new URL(location.href);
       url.hash = channel ? `${role}/${channel}` : role;
-      const child = window.open(url.toString(), `mapre-${role}-${channel ?? 'default'}`);
+      // '_blank' opens a fresh window on every call, so the same channel can be
+      // shown on several displays at once. The features string asks the browser
+      // for a chrome-less popup window rather than a tab.
+      const child = window.open(url.toString(), '_blank', windowFeatures());
       if (child) {
         sync.register(child);
       }
@@ -108,17 +120,30 @@ export function createController(deck: Deck): Controller {
 }
 
 /**
- * Collects the distinct channel names used anywhere in the deck, sorted for a
- * stable presentation in the UI.
+ * Builds a `window.open` features string that requests a separate, chrome-less
+ * popup window sized relative to the available screen.
  */
-function collectChannels(deck: Deck): string[] {
+function windowFeatures(): string {
+  const width = Math.round(window.screen.availWidth * 0.6);
+  const height = Math.round(window.screen.availHeight * 0.6);
+  return `popup,width=${width},height=${height}`;
+}
+
+/**
+ * Collects the channel names for the UI: the deck's default channel first, then
+ * every other channel used in the deck, sorted alphabetically. The default is
+ * always present so it can be opened even when no slide carries default content.
+ */
+function collectChannels(deck: Deck, defaultChannel: string): string[] {
   const names = new Set<string>();
   for (const slide of deck.slides) {
     for (const name of Object.keys(slide.channels)) {
       names.add(name);
     }
   }
-  return [...names].sort((first, second) => first.localeCompare(second));
+  names.delete(defaultChannel);
+  const rest = [...names].sort((first, second) => first.localeCompare(second));
+  return [defaultChannel, ...rest];
 }
 
 function keyToMove(

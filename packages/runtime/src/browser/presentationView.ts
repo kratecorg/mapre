@@ -2,8 +2,22 @@ import { renderSlide } from '@mapre/core';
 import type { Controller } from './controller';
 import { query, toggleFullscreen } from './dom';
 
-const TEMPLATE = `
-  <div class="stage"><div class="slide" id="stage-slide"></div></div>
+/**
+ * Options for {@link mountPresentationView}.
+ */
+export interface PresentationViewOptions {
+  /**
+   * Whether this window is controlled by a presenter. When true, the control
+   * bar is hidden and navigation happens from the presenter window.
+   */
+  connected: boolean;
+  /** Switches this window into presenter mode in place. */
+  onOpenPresenter: () => void;
+}
+
+const STAGE = '<div class="stage"><div class="slide" id="stage-slide"></div></div>';
+
+const CONTROL_BAR = `
   <footer class="bar">
     <button id="prev" type="button" aria-label="Previous">&#9664;</button>
     <span id="counter"></span>
@@ -17,26 +31,21 @@ const TEMPLATE = `
   </footer>`;
 
 /**
- * Mounts the audience-facing view: a single full-window slide plus a control
- * bar. It renders the given channel and stays in sync with any other open
- * window via the controller.
+ * Mounts the audience-facing view: a single full-window slide, and — unless the
+ * window is controlled by a presenter — a control bar. It renders the given
+ * channel and stays in sync with any other open window via the controller.
+ *
+ * Returns a dispose function that detaches the view from the controller.
  */
 export function mountPresentationView(
   root: HTMLElement,
   controller: Controller,
   channel: string,
-): void {
-  root.innerHTML = TEMPLATE;
+  options: PresentationViewOptions,
+): () => void {
+  root.innerHTML = options.connected ? STAGE : STAGE + CONTROL_BAR;
 
   const slideBox = query(root, '#stage-slide');
-  const counter = query(root, '#counter');
-  const previousButton = query<HTMLButtonElement>(root, '#prev');
-  const nextButton = query<HTMLButtonElement>(root, '#next');
-  const zoom = query<HTMLInputElement>(root, '#zoom');
-
-  if (controller.channels.length > 1) {
-    query(root, '#channel-label').textContent = channel;
-  }
 
   function render(): void {
     const { navigation, deck } = controller;
@@ -45,19 +54,45 @@ export function mountPresentationView(
       revealedFragments: navigation.stepIndex,
       channel,
     });
-    counter.textContent = `${navigation.slideIndex + 1} / ${deck.slides.length}`;
-    previousButton.disabled = navigation.isFirst;
-    nextButton.disabled = navigation.isLast;
+    updateBar();
   }
 
-  nextButton.addEventListener('click', () => controller.next());
-  previousButton.addEventListener('click', () => controller.previous());
-  query(root, '#open-presenter').addEventListener('click', () => controller.openWindow('presenter'));
+  function updateBar(): void {
+    if (options.connected) {
+      return;
+    }
+    const { navigation, deck } = controller;
+    query(root, '#counter').textContent = `${navigation.slideIndex + 1} / ${deck.slides.length}`;
+    query<HTMLButtonElement>(root, '#prev').disabled = navigation.isFirst;
+    query<HTMLButtonElement>(root, '#next').disabled = navigation.isLast;
+  }
+
+  if (!options.connected) {
+    wireControlBar(root, controller, channel, options.onOpenPresenter);
+  }
+
+  const unsubscribe = controller.onChange(render);
+  render();
+  return unsubscribe;
+}
+
+function wireControlBar(
+  root: HTMLElement,
+  controller: Controller,
+  channel: string,
+  onOpenPresenter: () => void,
+): void {
+  const zoom = query<HTMLInputElement>(root, '#zoom');
+
+  if (controller.channels.length > 1) {
+    query(root, '#channel-label').textContent = channel;
+  }
+
+  query(root, '#next').addEventListener('click', () => controller.next());
+  query(root, '#prev').addEventListener('click', () => controller.previous());
+  query(root, '#open-presenter').addEventListener('click', onOpenPresenter);
   query(root, '#fullscreen').addEventListener('click', toggleFullscreen);
   zoom.addEventListener('input', () => {
     document.documentElement.style.setProperty('--scale', zoom.value);
   });
-
-  controller.onChange(render);
-  render();
 }

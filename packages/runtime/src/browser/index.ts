@@ -22,14 +22,28 @@ function start(): void {
   const root = requireElement('app');
   const controller = createController(deck);
   const { role, channel } = parseHash(location.hash);
+  const activeChannel = channel ?? deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
 
-  if (role === 'presenter') {
-    mountPresenterView(root, controller);
-    return;
+  // A presentation window opened by a presenter (i.e. it has an opener) is
+  // controlled from there, so it hides its own control bar.
+  const connected = window.opener != null;
+
+  let dispose: (() => void) | undefined;
+
+  function show(nextRole: Role): void {
+    dispose?.();
+    if (nextRole === 'presenter') {
+      dispose = mountPresenterView(root, controller);
+      return;
+    }
+
+    dispose = mountPresentationView(root, controller, activeChannel, {
+      connected,
+      onOpenPresenter: () => show('presenter'),
+    });
   }
 
-  const activeChannel = channel ?? deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
-  mountPresentationView(root, controller, activeChannel);
+  show(role);
 }
 
 function parseHash(hash: string): { role: Role; channel?: string } {

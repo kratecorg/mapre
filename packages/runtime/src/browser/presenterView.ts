@@ -40,9 +40,12 @@ const TEMPLATE = `
 /**
  * Mounts the presenter view: the current slide, a preview of what the next step
  * reveals, speaker notes, a timer, and navigation controls. Navigation stays in
- * sync with the presentation window via the controller.
+ * sync with the presentation windows via the controller.
+ *
+ * Returns a dispose function that detaches the view from the controller and
+ * stops the timer interval.
  */
-export function mountPresenterView(root: HTMLElement, controller: Controller): void {
+export function mountPresenterView(root: HTMLElement, controller: Controller): () => void {
   root.innerHTML = TEMPLATE;
   document.title = `${controller.deck.metadata.title ?? 'mapre'} \u2013 Presenter`;
 
@@ -104,10 +107,15 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): v
 
   mountChannelButtons(query(root, '#pv-channels'), controller);
 
-  controller.onChange(renderPreview);
+  const unsubscribe = controller.onChange(renderPreview);
   renderPreview();
   renderTimer();
-  window.setInterval(renderTimer, TIMER_TICK_MS);
+  const intervalId = window.setInterval(renderTimer, TIMER_TICK_MS);
+
+  return () => {
+    unsubscribe();
+    window.clearInterval(intervalId);
+  };
 }
 
 /**
