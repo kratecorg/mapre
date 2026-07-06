@@ -31,6 +31,13 @@ export interface Slide {
   notes?: string;
   /** Number of progressive-reveal fragments (`@N` markers) on the slide. */
   fragmentCount: number;
+  /**
+   * Slide content split by channel. The key is the channel name; the value is
+   * that channel's markdown. Slides without a `channel` directive have a single
+   * entry under the deck's default channel. `content` mirrors the default
+   * channel for convenience.
+   */
+  channels: Record<string, string>;
   /** Slide-level layout hints and other directives. */
   metadata: SlideMetadata;
 }
@@ -52,4 +59,9 @@ export interface RenderOptions {
   revealedFragments?: number;
   /** Whether to apply Prism syntax highlighting to fenced code blocks. */
   highlight?: boolean;
+  /**
+   * Which channel to render. When omitted, the slide's default content is used.
+   * A channel without its own content falls back to the default content.
+   */
+  channel?: string;
 }

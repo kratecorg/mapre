@@ -40,4 +40,27 @@ describe('parseSlide', () => {
     expect(slide.notes).toBe('note');
     expect(slide.fragmentCount).toBe(1);
   });
+
+  it('puts unmarked content under the default channel', () => {
+    const slide = parseSlide('# Title', 0, { defaultChannel: 'de' });
+
+    expect(slide.channels).toEqual({ de: '# Title' });
+    expect(slide.content).toBe('# Title');
+  });
+
+  it('splits channel sections and shares notes across channels', () => {
+    const raw = '# Hallo\n\n[channel: en]: #\n\n# Hello\n???\nnote';
+    const slide = parseSlide(raw, 0, { defaultChannel: 'de' });
+
+    expect(slide.channels).toEqual({ de: '# Hallo', en: '# Hello' });
+    expect(slide.content).toBe('# Hallo');
+    expect(slide.notes).toBe('note');
+  });
+
+  it('counts fragments across all channels', () => {
+    const raw = '@1 a @1\n\n[channel: en]: #\n\n@1 a @1\n@2 b @2';
+    const slide = parseSlide(raw, 0, { defaultChannel: 'de' });
+
+    expect(slide.fragmentCount).toBe(2);
+  });
 });

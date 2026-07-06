@@ -1,4 +1,5 @@
 import type { Deck } from '../types';
+import { DEFAULT_CHANNEL } from './channels';
 import { extractFrontMatter } from './metadata';
 import { parseSlide } from './parseSlide';
 import { splitSlides } from './splitSlides';
@@ -10,9 +11,10 @@ import { splitSlides } from './splitSlides';
  */
 export function parseDeck(markdown: string): Deck {
   const { metadata, body } = extractFrontMatter(markdown);
+  const defaultChannel = metadata.defaultChannel ?? DEFAULT_CHANNEL;
   const slides = splitSlides(body)
     .filter((chunk) => chunk.trim() !== '')
-    .map((chunk, index) => parseSlide(chunk, index));
+    .map((chunk, index) => parseSlide(chunk, index, { defaultChannel }));
 
   return { metadata, slides };
 }

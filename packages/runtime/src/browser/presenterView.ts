@@ -28,6 +28,7 @@ const TEMPLATE = `
         <button id="pv-toggle" type="button">Start</button>
         <button id="pv-reset" type="button">Reset</button>
       </div>
+      <div class="pv-channels" id="pv-channels"></div>
       <div class="pv-nav">
         <button id="prev" type="button" aria-label="Previous">&#9664;</button>
         <span id="counter"></span>
@@ -101,8 +102,33 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): v
     renderTimer();
   });
 
+  mountChannelButtons(query(root, '#pv-channels'), controller);
+
   controller.onChange(renderPreview);
   renderPreview();
   renderTimer();
   window.setInterval(renderTimer, TIMER_TICK_MS);
+}
+
+/**
+ * Adds one button per channel that opens a presentation window on that channel.
+ * Nothing is rendered for a single-channel deck, where the choice is moot.
+ */
+function mountChannelButtons(container: HTMLElement, controller: Controller): void {
+  if (controller.channels.length <= 1) {
+    return;
+  }
+
+  const label = document.createElement('span');
+  label.className = 'pv-label';
+  label.textContent = 'Open channel';
+  container.appendChild(label);
+
+  for (const channel of controller.channels) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = channel;
+    button.addEventListener('click', () => controller.openWindow('presentation', channel));
+    container.appendChild(button);
+  }
 }

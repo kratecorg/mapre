@@ -1,4 +1,4 @@
-import { parseDeck } from '@mapre/core';
+import { DEFAULT_CHANNEL, parseDeck } from '@mapre/core';
 import { createController } from './controller';
 import type { Role } from './controller';
 import { mountPresentationView } from './presentationView';
@@ -21,17 +21,21 @@ function start(): void {
 
   const root = requireElement('app');
   const controller = createController(deck);
+  const { role, channel } = parseHash(location.hash);
 
-  if (roleFromHash() === 'presenter') {
+  if (role === 'presenter') {
     mountPresenterView(root, controller);
     return;
   }
 
-  mountPresentationView(root, controller);
+  const activeChannel = channel ?? deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
+  mountPresentationView(root, controller, activeChannel);
 }
 
-function roleFromHash(): Role {
-  return location.hash.replace(/^#/, '') === 'presenter' ? 'presenter' : 'presentation';
+function parseHash(hash: string): { role: Role; channel?: string } {
+  const [rolePart, channelPart] = hash.replace(/^#/, '').split('/');
+  const role: Role = rolePart === 'presenter' ? 'presenter' : 'presentation';
+  return { role, channel: channelPart || undefined };
 }
 
 function readSource(): string {

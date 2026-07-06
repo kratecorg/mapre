@@ -17,18 +17,21 @@ export type Role = 'presentation' | 'presenter';
 export interface Controller {
   readonly deck: Deck;
   readonly navigation: Navigation;
+  /** Distinct channel names across the deck, sorted alphabetically. */
+  readonly channels: string[];
   next(): void;
   previous(): void;
   goToSlide(index: number): void;
   first(): void;
   last(): void;
   onChange(listener: () => void): void;
-  openWindow(role: Role): void;
+  openWindow(role: Role, channel?: string): void;
 }
 
 export function createController(deck: Deck): Controller {
   const navigation = new Navigation(deck.slides.map((slide) => slide.fragmentCount + 1));
   const slideCount = deck.slides.length;
+  const channels = collectChannels(deck);
   const listeners: Array<() => void> = [];
 
   const sync = createSync(handleMessage);
@@ -84,6 +87,7 @@ export function createController(deck: Deck): Controller {
   return {
     deck,
     navigation,
+    channels,
     next: () => go(() => navigation.next()),
     previous: () => go(() => navigation.previous()),
     goToSlide: (index: number) => go(() => navigation.goToSlide(index)),
@@ -92,15 +96,29 @@ export function createController(deck: Deck): Controller {
     onChange: (listener: () => void) => {
       listeners.push(listener);
     },
-    openWindow: (role: Role) => {
+    openWindow: (role: Role, channel?: string) => {
       const url = new URL(location.href);
-      url.hash = role;
-      const child = window.open(url.toString(), `mapre-${role}`);
+      url.hash = channel ? `${role}/${channel}` : role;
+      const child = window.open(url.toString(), `mapre-${role}-${channel ?? 'default'}`);
       if (child) {
         sync.register(child);
       }
     },
   };
+}
+
+/**
+ * Collects the distinct channel names used anywhere in the deck, sorted for a
+ * stable presentation in the UI.
+ */
+function collectChannels(deck: Deck): string[] {
+  const names = new Set<string>();
+  for (const slide of deck.slides) {
+    for (const name of Object.keys(slide.channels)) {
+      names.add(name);
+    }
+  }
+  return [...names].sort((first, second) => first.localeCompare(second));
 }
 
 function keyToMove(

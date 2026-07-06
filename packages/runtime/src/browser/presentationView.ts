@@ -8,6 +8,7 @@ const TEMPLATE = `
     <button id="prev" type="button" aria-label="Previous">&#9664;</button>
     <span id="counter"></span>
     <button id="next" type="button" aria-label="Next">&#9654;</button>
+    <span id="channel-label" class="channel-label"></span>
     <button id="open-presenter" type="button">Presenter</button>
     <button id="fullscreen" type="button" aria-label="Fullscreen">&#9974;</button>
     <label class="zoom">Size
@@ -17,9 +18,14 @@ const TEMPLATE = `
 
 /**
  * Mounts the audience-facing view: a single full-window slide plus a control
- * bar. Navigation stays in sync with any other open window via the controller.
+ * bar. It renders the given channel and stays in sync with any other open
+ * window via the controller.
  */
-export function mountPresentationView(root: HTMLElement, controller: Controller): void {
+export function mountPresentationView(
+  root: HTMLElement,
+  controller: Controller,
+  channel: string,
+): void {
   root.innerHTML = TEMPLATE;
 
   const slideBox = query(root, '#stage-slide');
@@ -28,10 +34,17 @@ export function mountPresentationView(root: HTMLElement, controller: Controller)
   const nextButton = query<HTMLButtonElement>(root, '#next');
   const zoom = query<HTMLInputElement>(root, '#zoom');
 
+  if (controller.channels.length > 1) {
+    query(root, '#channel-label').textContent = channel;
+  }
+
   function render(): void {
     const { navigation, deck } = controller;
     const slide = deck.slides[navigation.slideIndex];
-    slideBox.innerHTML = renderSlide(slide, { revealedFragments: navigation.stepIndex });
+    slideBox.innerHTML = renderSlide(slide, {
+      revealedFragments: navigation.stepIndex,
+      channel,
+    });
     counter.textContent = `${navigation.slideIndex + 1} / ${deck.slides.length}`;
     previousButton.disabled = navigation.isFirst;
     nextButton.disabled = navigation.isLast;

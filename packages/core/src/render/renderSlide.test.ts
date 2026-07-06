@@ -3,6 +3,15 @@ import { parseSlide } from '../parser/parseSlide';
 import { renderSlide } from './renderSlide';
 
 describe('renderSlide', () => {
+  it('renders the requested channel and falls back to default content', () => {
+    const slide = parseSlide('# Hallo\n\n[channel: en]: #\n\n# Hello', 0, { defaultChannel: 'de' });
+
+    expect(renderSlide(slide, { channel: 'en' })).toContain('<h1>Hello</h1>');
+    expect(renderSlide(slide, { channel: 'de' })).toContain('<h1>Hallo</h1>');
+    // A channel without its own content falls back to the default.
+    expect(renderSlide(slide, { channel: 'fr' })).toContain('<h1>Hallo</h1>');
+  });
+
   it('renders markdown to HTML', () => {
     const slide = parseSlide('# Title\n\n**bold**', 0);
 

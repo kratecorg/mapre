@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { extractFrontMatter, extractSlideMetadata, parseKeyValueBlock } from './metadata';
+import {
+  extractFrontMatter,
+  extractSlideMetadata,
+  matchDirective,
+  parseKeyValueBlock,
+} from './metadata';
 
 describe('parseKeyValueBlock', () => {
   it('parses simple key/value pairs', () => {
@@ -35,6 +40,20 @@ describe('extractFrontMatter', () => {
     expect(metadata).toEqual({});
     expect(body).toBe('# First slide\n\n---\n\n# Second');
   });
+
+  it('extracts a leading directive block terminated by a blank line', () => {
+    const { metadata, body } = extractFrontMatter('[title: Deck]: #\n[defaultChannel: de]: #\n\n# First');
+
+    expect(metadata).toEqual({ title: 'Deck', defaultChannel: 'de' });
+    expect(body).toBe('# First');
+  });
+
+  it('does not treat a lone leading directive followed by content as deck metadata', () => {
+    const { metadata, body } = extractFrontMatter('[layout: center]: #\n# First');
+
+    expect(metadata).toEqual({});
+    expect(body).toBe('[layout: center]: #\n# First');
+  });
 });
 
 describe('extractSlideMetadata', () => {
@@ -59,5 +78,31 @@ describe('extractSlideMetadata', () => {
 
     expect(metadata).toEqual({});
     expect(body).toBe('<!-- just a note -->\n# Title');
+  });
+
+  it('supports link-reference directive syntax', () => {
+    const { metadata, body } = extractSlideMetadata('[layout: center]: #\n[aspect: 16:9]: #\n# Title');
+
+    expect(metadata).toEqual({ layout: 'center', aspect: '16:9' });
+    expect(body).toBe('# Title');
+  });
+
+  it('stops at a channel directive and leaves it in the body', () => {
+    const { metadata, body } = extractSlideMetadata('[layout: center]: #\n[channel: en]: #\n# Title');
+
+    expect(metadata).toEqual({ layout: 'center' });
+    expect(body).toBe('[channel: en]: #\n# Title');
+  });
+});
+
+describe('matchDirective', () => {
+  it('parses both directive forms', () => {
+    expect(matchDirective('<!-- layout: center -->')).toEqual({ key: 'layout', value: 'center' });
+    expect(matchDirective('[channel: en]: #')).toEqual({ key: 'channel', value: 'en' });
+  });
+
+  it('returns null for non-directive lines', () => {
+    expect(matchDirective('# Title')).toBeNull();
+    expect(matchDirective('[a link](https://example.com)')).toBeNull();
   });
 });

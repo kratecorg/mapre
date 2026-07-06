@@ -63,6 +63,13 @@ export const STYLES = `
     background: #1e293b;
   }
   .zoom { display: flex; align-items: center; gap: 0.5rem; }
+  .channel-label {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .channel-label:empty { display: none; }
 
   /* Presenter view */
   .presenter {
@@ -108,5 +115,6 @@ export const STYLES = `
     padding: 0.5rem 0.25rem;
   }
   .pv-timer, .pv-nav { display: flex; align-items: center; gap: 0.75rem; }
+  .pv-channels { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   #pv-time { font-variant-numeric: tabular-nums; font-size: 1.75rem; }
 `;

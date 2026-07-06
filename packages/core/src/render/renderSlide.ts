@@ -20,8 +20,9 @@ marked.setOptions({ gfm: true, breaks: false });
 export function renderSlide(slide: Slide, options: RenderOptions = {}): string {
   const revealed = options.revealedFragments ?? slide.fragmentCount;
   const highlight = options.highlight ?? true;
+  const source = selectChannelContent(slide, options.channel);
 
-  const withFragments = preprocessFragments(slide.content, revealed);
+  const withFragments = preprocessFragments(source, revealed);
   let html = marked.parse(withFragments) as string;
   html = postprocessFragments(html);
 
@@ -30,6 +31,18 @@ export function renderSlide(slide: Slide, options: RenderOptions = {}): string {
   }
 
   return html;
+}
+
+/**
+ * Picks the content for the requested channel, falling back to the slide's
+ * default content when the channel has no content of its own.
+ */
+function selectChannelContent(slide: Slide, channel: string | undefined): string {
+  if (channel === undefined) {
+    return slide.content;
+  }
+
+  return slide.channels[channel] ?? slide.content;
 }
 
 function applySyntaxHighlighting(html: string): string {

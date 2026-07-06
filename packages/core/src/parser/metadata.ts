@@ -40,22 +40,84 @@ export function extractFrontMatter(markdown: string): {
   body: string;
 } {
   const match = markdown.match(FRONT_MATTER_PATTERN);
-  if (!match) {
-    return { metadata: {}, body: markdown };
+  if (match) {
+    return {
+      metadata: parseKeyValueBlock(match[1]),
+      body: markdown.slice(match[0].length),
+    };
   }
 
-  return {
-    metadata: parseKeyValueBlock(match[1]),
-    body: markdown.slice(match[0].length),
-  };
+  const leadingBlock = extractLeadingDirectiveBlock(markdown);
+  if (leadingBlock) {
+    return leadingBlock;
+  }
+
+  return { metadata: {}, body: markdown };
 }
 
-const DIRECTIVE_PATTERN = /^<!--\s*([^:<>]+?)\s*:\s*(.*?)\s*-->$/;
+/**
+ * Extracts a deck-level metadata block written as a leading run of directive
+ * lines (`[key: value]: #` or `<!-- key: value -->`) at the very start of the
+ * document. The block must be terminated by a blank line; if non-directive
+ * content appears before any blank line, the directives belong to the first
+ * slide instead and this returns null.
+ */
+function extractLeadingDirectiveBlock(markdown: string): {
+  metadata: Record<string, string>;
+  body: string;
+} | null {
+  const lines = markdown.split('\n');
+  const metadata: Record<string, string> = {};
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index].trim();
+    if (line === '') {
+      break;
+    }
+
+    const directive = matchDirective(line);
+    if (!directive) {
+      return null;
+    }
+
+    metadata[directive.key] = directive.value;
+    index++;
+  }
+
+  if (index === 0 || index >= lines.length) {
+    return null;
+  }
+
+  return { metadata, body: lines.slice(index + 1).join('\n') };
+}
+
+const HTML_DIRECTIVE_PATTERN = /^<!--\s*([^:<>]+?)\s*:\s*(.*?)\s*-->$/;
+const LINK_REFERENCE_DIRECTIVE_PATTERN = /^\[\s*([^:\]]+?)\s*:\s*(.*?)\s*\]:\s*#\s*$/;
 
 /**
- * Extracts leading `<!-- key: value -->` directive comments from a slide as
- * slide-level metadata. Parsing stops at the first line that is neither blank
- * nor a directive, so directives must appear at the top of the slide.
+ * Recognises a single directive line in either supported form:
+ * `<!-- key: value -->` or the markdown link-reference form `[key: value]: #`.
+ * Returns the parsed key/value, or null when the line is not a directive.
+ */
+export function matchDirective(line: string): { key: string; value: string } | null {
+  const html = line.match(HTML_DIRECTIVE_PATTERN);
+  if (html) {
+    return { key: html[1].trim(), value: html[2].trim() };
+  }
+
+  const linkReference = line.match(LINK_REFERENCE_DIRECTIVE_PATTERN);
+  if (linkReference) {
+    return { key: linkReference[1].trim(), value: linkReference[2].trim() };
+  }
+
+  return null;
+}
+
+/**
+ * Extracts leading directive lines from a slide as slide-level metadata. Parsing
+ * stops at the first line that is neither blank nor a directive, and also at a
+ * `channel` directive, which begins a channel section rather than metadata.
  */
 export function extractSlideMetadata(content: string): {
   metadata: Record<string, string>;
@@ -73,12 +135,12 @@ export function extractSlideMetadata(content: string): {
       continue;
     }
 
-    const match = line.match(DIRECTIVE_PATTERN);
-    if (!match) {
+    const directive = matchDirective(line);
+    if (!directive || directive.key === 'channel') {
       break;
     }
 
-    metadata[match[1].trim()] = match[2].trim();
+    metadata[directive.key] = directive.value;
     index++;
   }
 

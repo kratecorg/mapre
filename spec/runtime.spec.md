@@ -131,12 +131,12 @@ gerendert (kein sichtbarer Output) und bleibt im Rohtext kompakt und lesbar.
   gilt CommonMark „first definition wins“ — unkritisch, da die Definition nie
   als Link referenziert wird.
 
-> **Abhängigkeit zu `@mapre/core`:** Der bestehende Direktiven-Parser
-> (`extractSlideMetadata`, aktuell `<!-- key: value -->`) wird auf die
-> Link-Reference-Syntax umgestellt. Das Kanal-Konzept erfordert zusätzlich eine
-> Erweiterung des Slide-Modells (Inhalt **pro Kanal** statt eines einzelnen
-> `content`-Strings). Die Modelländerung muss abwärtskompatibel bleiben — Folien
-> ohne Kanäle verhalten sich wie bisher.
+> **Abhängigkeit zu `@mapre/core`:** Der Direktiven-Parser unterstützt die
+> Link-Reference-Syntax (`matchDirective`, zusätzlich zu `<!-- key: value -->`).
+> Das Slide-Modell trägt `channels: Record<string, string>` (Inhalt pro Kanal);
+> `renderSlide(slide, { channel })` wählt den Kanal und fällt bei fehlendem
+> Inhalt auf den Default zurück. Folien ohne Kanäle verhalten sich wie bisher
+> (ein Eintrag unter dem Default-Kanal). **Status: implementiert.**
 
 ### 5.3 Geltungsbereiche
 
