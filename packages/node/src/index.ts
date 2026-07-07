@@ -1,3 +1,3 @@
 export { collectMarkdownFiles } from './collectMarkdownFiles';
 export { loadDeck, loadDeckSource } from './loadDeck';
-export { loadDeckStyles } from './loadDeckStyles';
+export { loadDeckStyles, resolveDeckStylesheetPath } from './loadDeckStyles';

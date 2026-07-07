@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseBuildArgs, parseInitArgs, run } from './run';
+import { parseBuildArgs, parseDevArgs, parseInitArgs, run } from './run';
 import type { CliIo } from './run';
 
 function captureIo(): { io: CliIo; logs: string[]; errors: string[] } {
@@ -35,6 +35,30 @@ describe('parseBuildArgs', () => {
 
   it('rejects unknown options', () => {
     expect(() => parseBuildArgs(['--nope'])).toThrow(/Unknown option/);
+  });
+});
+
+describe('parseDevArgs', () => {
+  it('applies defaults including the dev port', () => {
+    expect(parseDevArgs([])).toEqual({
+      slidesDir: 'slides',
+      outFile: 'dist/index.html',
+      title: undefined,
+      port: 4321,
+    });
+  });
+
+  it('reads a positional slides directory and a port', () => {
+    expect(parseDevArgs(['content', '-p', '5000'])).toEqual({
+      slidesDir: 'content',
+      outFile: 'dist/index.html',
+      title: undefined,
+      port: 5000,
+    });
+  });
+
+  it('rejects an invalid port', () => {
+    expect(() => parseDevArgs(['-p', '99999'])).toThrow(/Invalid port/);
   });
 });
 

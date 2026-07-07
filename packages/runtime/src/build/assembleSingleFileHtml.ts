@@ -12,6 +12,12 @@ export interface AssembleSingleFileHtmlParams {
   clientScript: string;
   /** Optional style override; defaults to the built-in {@link STYLES}. */
   styles?: string;
+  /**
+   * Optional author stylesheet inlined after the baseline styles, so it wins by
+   * cascade order. Comes from a deck's `stylesheet` directive (see
+   * `@mapre/node`'s `loadDeckStyles`).
+   */
+  extraStyles?: string;
 }
 
 /**
@@ -30,6 +36,7 @@ export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): st
   const { title, markdown, clientScript } = params;
   const styles = params.styles ?? STYLES;
   const source = serializeSource(markdown);
+  const authorStyles = renderAuthorStyles(params.extraStyles);
 
   return `<!doctype html>
 <html lang="en">
@@ -37,7 +44,7 @@ export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): st
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(title)}</title>
-  <style>${styles}</style>
+  <style>${styles}</style>${authorStyles}
 </head>
 <body>
   <div id="app"></div>
@@ -46,6 +53,27 @@ export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): st
 </body>
 </html>
 `;
+}
+
+/**
+ * Renders the optional author stylesheet as a second `<style>` element placed
+ * after the baseline styles, so equal-specificity rules win by source order.
+ * Returns an empty string when no author styles are given.
+ */
+function renderAuthorStyles(extraStyles: string | undefined): string {
+  if (extraStyles === undefined || extraStyles.trim() === '') {
+    return '';
+  }
+
+  return `\n  <style>${sanitizeStyles(extraStyles)}</style>`;
+}
+
+/**
+ * Neutralizes any `</style` sequence so author CSS cannot break out of the
+ * surrounding `<style>` element. CSS has no legitimate need for that sequence.
+ */
+function sanitizeStyles(css: string): string {
+  return css.replace(/<\/style/gi, '<\\/style');
 }
 
 /**

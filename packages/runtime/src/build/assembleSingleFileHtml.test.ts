@@ -41,4 +41,37 @@ describe('assembleSingleFileHtml', () => {
     expect(html).not.toMatch(/<link\b/);
     expect(html).not.toMatch(/src=["']https?:/);
   });
+
+  it('inlines author styles after the baseline styles so they win by cascade', () => {
+    const html = assembleSingleFileHtml({
+      title: 'Demo',
+      markdown,
+      clientScript: '',
+      styles: '.slide { color: red; }',
+      extraStyles: '.slide { color: green; }',
+    });
+
+    const baselineIndex = html.indexOf('.slide { color: red; }');
+    const authorIndex = html.indexOf('.slide { color: green; }');
+    expect(baselineIndex).toBeGreaterThanOrEqual(0);
+    expect(authorIndex).toBeGreaterThan(baselineIndex);
+  });
+
+  it('omits the author style element when no extra styles are given', () => {
+    const html = assembleSingleFileHtml({ title: 'Demo', markdown, clientScript: '' });
+
+    expect(html.match(/<style>/g)).toHaveLength(1);
+  });
+
+  it('neutralizes a "</style>" breakout inside author styles', () => {
+    const html = assembleSingleFileHtml({
+      title: 'Demo',
+      markdown,
+      clientScript: '',
+      extraStyles: '.x {}</style><script>alert(1)</script>',
+    });
+
+    expect(html).not.toContain('</style><script>alert(1)');
+    expect(html).toContain('<\\/style>');
+  });
 });

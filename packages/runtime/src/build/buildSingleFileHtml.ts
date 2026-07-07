@@ -17,6 +17,11 @@ export interface BuildSingleFileHtmlOptions {
   /** Optional style override passed through to the assembler. */
   styles?: string;
   /**
+   * Optional author stylesheet inlined after the baseline styles. Typically the
+   * contents of a deck's `stylesheet` directive target.
+   */
+  extraStyles?: string;
+  /**
    * Overrides the document title. Defaults to the deck's front-matter `title`,
    * or a generic fallback when none is set.
    */
@@ -43,6 +48,7 @@ export function buildSingleFileHtml(
     markdown,
     clientScript,
     styles: options.styles,
+    extraStyles: options.extraStyles,
   });
 }
 

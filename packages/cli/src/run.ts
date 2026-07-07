@@ -1,4 +1,5 @@
 import { buildPresentation } from './build';
+import { startDevServer } from './dev';
 import { initPresentation } from './init';
 
 /**
@@ -20,6 +21,16 @@ export interface BuildArgs {
 }
 
 /**
+ * Parsed options for the `dev` command.
+ */
+export interface DevArgs {
+  slidesDir: string;
+  outFile: string;
+  title?: string;
+  port: number;
+}
+
+/**
  * Parsed options for the `init` command.
  */
 export interface InitArgs {
@@ -29,6 +40,7 @@ export interface InitArgs {
 
 const DEFAULT_SLIDES_DIR = 'slides';
 const DEFAULT_OUT_FILE = 'dist/index.html';
+const DEFAULT_DEV_PORT = 4321;
 
 const DEFAULT_IO: CliIo = {
   log: (message) => process.stdout.write(`${message}\n`),
@@ -41,14 +53,21 @@ const HELP_TEXT = [
   'Usage:',
   '  mapre init <dir> [--name <name>]     Scaffold a new presentation folder',
   '  mapre build [slidesDir] [options]    Build a single-file HTML presentation',
+  '  mapre dev [slidesDir] [options]      Build, serve, and rebuild on change',
   '',
   'build options:',
   '  -o, --out <file>     Output HTML file (default: dist/index.html)',
   '  -t, --title <title>  Override the document title',
   '',
+  'dev options:',
+  '  -o, --out <file>     Output HTML file (default: dist/index.html)',
+  '  -t, --title <title>  Override the document title',
+  '  -p, --port <port>    Port to serve on (default: 4321)',
+  '',
   'Examples:',
   '  mapre init my-talk',
   '  mapre build slides -o dist/index.html',
+  '  mapre dev slides -p 4321',
 ].join('\n');
 
 /**
@@ -63,6 +82,17 @@ export function run(argv: string[], io: CliIo = DEFAULT_IO): number {
       const args = parseBuildArgs(rest);
       const outFile = buildPresentation(args);
       io.log(`Built presentation -> ${outFile}`);
+      return 0;
+    }
+    case 'dev': {
+      const args = parseDevArgs(rest);
+      // Build once up front so configuration errors fail fast before serving.
+      buildPresentation(args);
+      const server = startDevServer(args, io);
+      server.whenReady.then(({ url }) => {
+        io.log(`Dev server -> ${url}`);
+        io.log(`Watching ${args.slidesDir} \u2014 edit markdown, then reload the page.`);
+      });
       return 0;
     }
     case 'init': {
@@ -118,8 +148,50 @@ export function parseBuildArgs(args: string[]): BuildArgs {
 }
 
 /**
- * Parses the arguments of the `init` command.
+ * Parses the arguments of the `dev` command: the build options plus a port.
  */
+export function parseDevArgs(args: string[]): DevArgs {
+  const positionals: string[] = [];
+  let outFile = DEFAULT_OUT_FILE;
+  let title: string | undefined;
+  let port = DEFAULT_DEV_PORT;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '-o' || arg === '--out') {
+      outFile = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '-t' || arg === '--title') {
+      title = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '-p' || arg === '--port') {
+      port = parsePort(requireValue(arg, args[index + 1]));
+      index += 1;
+    } else if (arg.startsWith('-')) {
+      throw new Error(`Unknown option: ${arg}`);
+    } else {
+      positionals.push(arg);
+    }
+  }
+
+  return {
+    slidesDir: positionals[0] ?? DEFAULT_SLIDES_DIR,
+    outFile,
+    title,
+    port,
+  };
+}
+
+/**
+ * Parses a port argument into a valid TCP port number.
+ */
+function parsePort(value: string): number {
+  const port = Number(value);
+  if (!Number.isInteger(port) || port < 0 || port > 65535) {
+    throw new Error(`Invalid port: ${value}`);
+  }
+  return port;
+}
 export function parseInitArgs(args: string[]): InitArgs {
   const positionals: string[] = [];
   let name: string | undefined;
