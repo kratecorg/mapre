@@ -11,7 +11,7 @@ const WINDOWS_TICK_MS = 1000;
 const TEMPLATE = `
   <div class="presenter">
     <section class="pv-current">
-      <div class="pv-label">Current</div>
+      <div class="pv-label">Current<span id="pv-overflow" class="pv-overflow" title="Slide content overflows the box">⚠ Overflow</span></div>
       <div class="pv-stage">
         <div class="slide-box" id="pv-current-box">
           <div class="slide" id="pv-current"></div>
@@ -77,6 +77,7 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
   const toggleButton = query(root, '#pv-toggle');
   const boxToggleButton = query(root, '#pv-box-toggle');
   const currentSlideBox = query(root, '#pv-current-box');
+  const overflowBadge = query(root, '#pv-overflow');
 
   const timer = new Timer();
 
@@ -90,6 +91,19 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
     counter.textContent = `${navigation.slideIndex + 1} / ${deck.slides.length}`;
     previousButton.disabled = navigation.isFirst;
     nextButton.disabled = navigation.isLast;
+    updateOverflowWarning();
+  }
+
+  /**
+   * Flags when the current slide's content exceeds its fixed-aspect box, so the
+   * presenter can trim it. Content is clipped rather than shrunk, so the warning
+   * is the only cue that something is cut off.
+   */
+  function updateOverflowWarning(): void {
+    const overflowing =
+      currentBox.scrollHeight > currentBox.clientHeight + 1 ||
+      currentBox.scrollWidth > currentBox.clientWidth + 1;
+    overflowBadge.classList.toggle('is-visible', overflowing);
   }
 
   /**

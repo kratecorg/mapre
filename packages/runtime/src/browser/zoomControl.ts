@@ -1,10 +1,10 @@
-const MIN_SCALE = 1;
-const MAX_SCALE = 4;
+const MIN_SCALE = 0.2;
+const MAX_SCALE = 3;
 const SCALE_STEP = 0.2;
 const EPSILON = 1e-9;
 
 /** The initial content scale, matching the CSS `--scale` default. */
-export const DEFAULT_SCALE = 1.6;
+export const DEFAULT_SCALE = 1;
 
 /**
  * Creates a discrete zoom control: a minus button, the current value, and a plus

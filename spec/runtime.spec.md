@@ -249,9 +249,11 @@ Konsequenzen:
   relativ zum Folienordner. Beim Build liest `@mapre/node` (`loadDeckStyles`)
   diese Datei und inlined sie **nach** den Baseline-Styles, sodass sie per
   Kaskade gewinnt — das Ergebnis bleibt eine einzige, in sich geschlossene
-  `.html`. Empfehlung: Regeln auf `.stage`/`.stage .slide` beschränken, damit
-  die Presenter-Ansicht ihr eigenes Styling behält. Beispiel:
-  [`examples/fau-theme/`](../examples/fau-theme/README.md). **Status: implementiert.**
+  `.html`. Empfehlung: Regeln auf `.slide-box`/`.slide` beschränken (der
+  Folien-Canvas, der in Publikums- **und** Presenter-Ansicht existiert), damit
+  das Theme überall gleich aussieht und die restliche Presenter-Oberfläche ihr
+  eigenes Styling behält. Beispiel:
+  [`examples/custom-theme/`](../examples/custom-theme/README.md). **Status: implementiert.**
 - **Themes**: benannte Styling-Presets über die `theme`-Direktive.
   *(Offen: Theme-Mechanismus als Preset-Bündel über CSS-Variablen.)*
 

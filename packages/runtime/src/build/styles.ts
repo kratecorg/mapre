@@ -4,7 +4,7 @@
  * into the generated HTML without any external stylesheet.
  */
 export const STYLES = `
-  :root { --scale: 1.6; --aspect-w: 16; --aspect-h: 9; }
+  :root { --scale: 1; --aspect-w: 16; --aspect-h: 9; }
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -43,8 +43,8 @@ export const STYLES = `
     width: 100%;
     height: 100%;
     padding: 5cqh 6cqw;
-    overflow: auto;
-    font-size: calc(var(--scale) * 2.7cqh);
+    overflow: hidden;
+    font-size: calc(var(--scale) * 4.3cqh);
   }
   .slide h1 { color: #38bdf8; }
   .slide pre {
@@ -153,7 +153,7 @@ export const STYLES = `
   .pv-window-label { flex: 1; min-width: 4rem; color: #cbd5e1; }
   .pv-window button { padding: 0.25em 0.6em; font-size: 0.85rem; }
   .pv-empty { color: #64748b; font-size: 0.85rem; }
-  .pv-stage .slide { font-size: calc(var(--pv-scale, 1.3) * 3cqh); }
+  .pv-stage .slide { font-size: calc(var(--pv-scale, 1) * 4.3cqh); }
   .pv-notes > div { white-space: pre-wrap; }
   .pv-label {
     font-size: 0.75rem;
@@ -162,6 +162,15 @@ export const STYLES = `
     color: #94a3b8;
     margin-bottom: 0.25rem;
   }
+  .pv-overflow {
+    display: none;
+    margin-left: 0.5em;
+    color: #f59e0b;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .pv-overflow.is-visible { display: inline; }
   .pv-bar {
     display: flex;
     align-items: center;

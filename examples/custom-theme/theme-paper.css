@@ -1,0 +1,91 @@
+/*
+ * "Paper" — a neutral light theme demonstrating the `stylesheet` directive.
+ * Original styling, no external assets, so it can live in the repository.
+ *
+ * Rules are scoped to the slide box (`.slide-box`) and the slide (`.slide`),
+ * which exist in both the audience stage and the presenter previews, so the
+ * theme looks identical wherever a slide is rendered.
+ */
+
+.slide-box {
+  --paper-bg: #faf7f0;
+  --paper-ink: #2b2b2b;
+  --paper-accent: #9a3b3b;
+  --paper-muted: #6b6b6b;
+  --paper-code-bg: #f0ece2;
+  --paper-font: "Iowan Old Style", Georgia, "Times New Roman", serif;
+
+  background: var(--paper-bg);
+}
+
+.slide {
+  color: var(--paper-ink);
+  font-family: var(--paper-font);
+  line-height: 1.55;
+  text-align: left;
+}
+
+.slide h1,
+.slide h2,
+.slide h3 {
+  color: var(--paper-accent);
+  font-weight: 700;
+}
+
+.slide h1 {
+  border-bottom: 0.08em solid var(--paper-accent);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.6em;
+}
+
+.slide a {
+  color: var(--paper-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.slide ul > li::marker {
+  color: var(--paper-accent);
+}
+
+.slide pre {
+  background: var(--paper-code-bg);
+  border-left: 0.25em solid var(--paper-accent);
+  border-radius: 0.25em;
+  color: var(--paper-ink);
+}
+
+.slide code {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+/* Syntax tokens tuned for a light background */
+.slide .token.comment,
+.slide .token.prolog,
+.slide .token.doctype,
+.slide .token.cdata {
+  color: #8a8175;
+}
+.slide .token.punctuation {
+  color: #6b6b6b;
+}
+.slide .token.keyword,
+.slide .token.boolean,
+.slide .token.operator {
+  color: #9a3b3b;
+}
+.slide .token.string,
+.slide .token.char,
+.slide .token.attr-value {
+  color: #3f6f3f;
+}
+.slide .token.number,
+.slide .token.constant,
+.slide .token.symbol {
+  color: #a06a1b;
+}
+.slide .token.function,
+.slide .token.class-name,
+.slide .token.annotation {
+  color: #3a5b8c;
+}
