@@ -64,4 +64,16 @@ export interface RenderOptions {
    * A channel without its own content falls back to the default content.
    */
   channel?: string;
+  /**
+   * Named HTML templates the slide can select through its `template` directive.
+   * The keyed template wraps the rendered slide body, with `{{content}}` marking
+   * where the body goes and `{{key}}` placeholders filled from {@link variables}
+   * and the slide's own metadata.
+   */
+  templates?: Record<string, string>;
+  /**
+   * Values available to template placeholders, such as deck-level metadata and
+   * built-ins (e.g. `pageNumber`). The slide's own metadata takes precedence.
+   */
+  variables?: Record<string, string>;
 }

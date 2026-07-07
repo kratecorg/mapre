@@ -15,7 +15,7 @@ export interface CliIo {
  * Parsed options for the `build` command.
  */
 export interface BuildArgs {
-  slidesDir: string;
+  projectDir: string;
   outFile: string;
   title?: string;
 }
@@ -24,7 +24,7 @@ export interface BuildArgs {
  * Parsed options for the `dev` command.
  */
 export interface DevArgs {
-  slidesDir: string;
+  projectDir: string;
   outFile: string;
   title?: string;
   port: number;
@@ -38,7 +38,7 @@ export interface InitArgs {
   name?: string;
 }
 
-const DEFAULT_SLIDES_DIR = 'slides';
+const DEFAULT_PROJECT_DIR = '.';
 const DEFAULT_OUT_FILE = 'dist/index.html';
 const DEFAULT_DEV_PORT = 4321;
 
@@ -52,8 +52,12 @@ const HELP_TEXT = [
   '',
   'Usage:',
   '  mapre init <dir> [--name <name>]     Scaffold a new presentation folder',
-  '  mapre build [slidesDir] [options]    Build a single-file HTML presentation',
-  '  mapre dev [slidesDir] [options]      Build, serve, and rebuild on change',
+  '  mapre build [projectDir] [options]   Build a single-file HTML presentation',
+  '  mapre dev [projectDir] [options]     Build, serve, and rebuild on change',
+  '',
+  'A project has a fixed layout: a slides/ folder (markdown) and an optional',
+  'style/ folder (CSS and HTML templates). projectDir defaults to the current',
+  'directory.',
   '',
   'build options:',
   '  -o, --out <file>     Output HTML file (default: dist/index.html)',
@@ -66,8 +70,8 @@ const HELP_TEXT = [
   '',
   'Examples:',
   '  mapre init my-talk',
-  '  mapre build slides -o dist/index.html',
-  '  mapre dev slides -p 4321',
+  '  mapre build -o dist/index.html',
+  '  mapre dev -p 4321',
 ].join('\n');
 
 /**
@@ -91,7 +95,7 @@ export function run(argv: string[], io: CliIo = DEFAULT_IO): number {
       const server = startDevServer(args, io);
       server.whenReady.then(({ url }) => {
         io.log(`Dev server -> ${url}`);
-        io.log(`Watching ${args.slidesDir} \u2014 edit markdown, then reload the page.`);
+        io.log(`Watching ${args.projectDir}/slides — edit markdown, then reload the page.`);
       });
       return 0;
     }
@@ -141,7 +145,7 @@ export function parseBuildArgs(args: string[]): BuildArgs {
   }
 
   return {
-    slidesDir: positionals[0] ?? DEFAULT_SLIDES_DIR,
+    projectDir: positionals[0] ?? DEFAULT_PROJECT_DIR,
     outFile,
     title,
   };
@@ -175,7 +179,7 @@ export function parseDevArgs(args: string[]): DevArgs {
   }
 
   return {
-    slidesDir: positionals[0] ?? DEFAULT_SLIDES_DIR,
+    projectDir: positionals[0] ?? DEFAULT_PROJECT_DIR,
     outFile,
     title,
     port,

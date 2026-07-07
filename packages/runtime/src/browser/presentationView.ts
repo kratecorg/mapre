@@ -1,4 +1,3 @@
-import { renderSlide } from '@mapre/core';
 import type { Controller } from './controller';
 import { query, toggleFullscreen } from './dom';
 import { createZoomControl, DEFAULT_SCALE } from './zoomControl';
@@ -49,12 +48,8 @@ export function mountPresentationView(
   const box = query(root, '.slide-box');
 
   function render(): void {
-    const { navigation, deck } = controller;
-    const slide = deck.slides[navigation.slideIndex];
-    slideBox.innerHTML = renderSlide(slide, {
-      revealedFragments: navigation.stepIndex,
-      channel,
-    });
+    const { navigation } = controller;
+    slideBox.innerHTML = controller.render(navigation.slideIndex, navigation.stepIndex, channel);
     box.classList.toggle('show-box', controller.isBoxVisible());
     updateBar();
   }

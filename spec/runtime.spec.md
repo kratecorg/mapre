@@ -166,6 +166,7 @@ Dieselbe Syntax wirkt je nach Position auf drei Ebenen:
 | `channel`          | Kanal-Abschnitt  | Startet einen kanalspezifischen Inhaltsabschnitt                 | neu       |
 | `background`       | Folie / Kanal    | Hintergrund (Bildpfad oder Farbe) für Folie bzw. Kanal-Abschnitt | neu       |
 | `stylesheet`       | Deck             | Autor-CSS relativ zum Folienordner, wird ins HTML inlined (§9)  | vorhanden |
+| `template`         | Folie            | Wählt einen HTML-Folienmaster aus `style/` (§9)                 | vorhanden |
 | `theme`            | Deck / Folie     | Styling-Theme (siehe §9)                                         | offen     |
 | `duration`         | Folie            | Ziel-/Sollzeit in Minuten für Timer-Slots (siehe §4)            | offen     |
 | `id`               | Folie            | Benannter Anker für Deep-Linking/Sprungmarken (siehe §8)        | offen     |
@@ -256,6 +257,17 @@ Konsequenzen:
   [`examples/custom-theme/`](../examples/custom-theme/README.md). **Status: implementiert.**
 - **Themes**: benannte Styling-Presets über die `theme`-Direktive.
   *(Offen: Theme-Mechanismus als Preset-Bündel über CSS-Variablen.)*
+- **Folienmaster / Templates**: HTML-Dateien im `style/`-Ordner (z. B.
+  `style/main-white.html`) dienen als Master. Eine Folie wählt einen per
+  `[template: main-white]: #`. Der Master enthält Platzhalter: `{{content}}`
+  nimmt den gerenderten Folien-Body auf, weitere `{{key}}` werden aus den
+  Folien-Direktiven (`[title: …]: #`), Deck-Metadaten und Built-ins
+  (`pageNumber`, `slideCount`) gefüllt und HTML-escaped. So liegen Titel/
+  Subheadline etc. in den Direktiven statt im Markdown. **Status: implementiert.**
+- **Projektstruktur**: Ein Projekt hat feste Ordner — `slides/` (Markdown) und
+  optional `style/` (alle `*.css` werden inlined, alle `*.html` als Master
+  registriert). `mapre build`/`mapre dev` erwarten den Projektordner (Default
+  `.`) und fragen die Unterordner nicht ab.
 
 ## 10. Zusätzliche Ideen (zur Diskussion)
 

@@ -18,6 +18,12 @@ export interface AssembleSingleFileHtmlParams {
    * `@mapre/node`'s `loadDeckStyles`).
    */
   extraStyles?: string;
+  /**
+   * Optional named HTML templates, inlined so the browser can wrap slides that
+   * select one through their `template` directive. Comes from a project's
+   * `style/` folder (see `@mapre/node`'s `loadStyleAssets`).
+   */
+  templates?: Record<string, string>;
 }
 
 /**
@@ -37,6 +43,7 @@ export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): st
   const styles = params.styles ?? STYLES;
   const source = serializeSource(markdown);
   const authorStyles = renderAuthorStyles(params.extraStyles);
+  const templates = serializeJson(params.templates ?? {});
 
   return `<!doctype html>
 <html lang="en">
@@ -49,6 +56,7 @@ export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): st
 <body>
   <div id="app"></div>
   <script id="mapre-source" type="application/json">${source}</script>
+  <script id="mapre-templates" type="application/json">${templates}</script>
   <script>${clientScript}</script>
 </body>
 </html>
@@ -83,6 +91,14 @@ function sanitizeStyles(css: string): string {
  */
 function serializeSource(markdown: string): string {
   return JSON.stringify(markdown).replace(/</g, '\\u003c');
+}
+
+/**
+ * Serializes an arbitrary JSON value for inlining in a `<script>` element,
+ * escaping `<` so it cannot break out (e.g. via `</script>` inside a template).
+ */
+function serializeJson(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
 }
 
 function escapeHtml(text: string): string {

@@ -7,6 +7,7 @@ import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-json.js';
 import type { RenderOptions, Slide } from '../types';
 import { postprocessFragments, preprocessFragments } from '../parser/fragments';
+import { applyTemplate } from './applyTemplate';
 
 marked.setOptions({ gfm: true, breaks: false });
 
@@ -30,7 +31,27 @@ export function renderSlide(slide: Slide, options: RenderOptions = {}): string {
     html = applySyntaxHighlighting(html);
   }
 
-  return html;
+  return wrapInTemplate(slide, html, options);
+}
+
+/**
+ * Wraps the rendered body in the slide's selected template, if any. The slide's
+ * `template` directive names a template from {@link RenderOptions.templates};
+ * when it is absent or unknown, the plain body is returned unchanged.
+ */
+function wrapInTemplate(slide: Slide, html: string, options: RenderOptions): string {
+  const templateName = slide.metadata.template;
+  if (templateName === undefined || options.templates === undefined) {
+    return html;
+  }
+
+  const template = options.templates[templateName];
+  if (template === undefined) {
+    return html;
+  }
+
+  const variables = { ...(options.variables ?? {}), ...slide.metadata };
+  return applyTemplate(template, variables, html);
 }
 
 /**

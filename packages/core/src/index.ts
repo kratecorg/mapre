@@ -18,3 +18,4 @@ export {
 } from './parser/fragments';
 
 export { renderSlide } from './render/renderSlide';
+export { applyTemplate } from './render/applyTemplate';

@@ -1,5 +1,5 @@
 import type { Deck } from '@mapre/core';
-import { DEFAULT_CHANNEL } from '@mapre/core';
+import { DEFAULT_CHANNEL, renderSlide } from '@mapre/core';
 import { Navigation } from '../core/navigation';
 import { createSync } from './sync';
 import type { SyncMessage } from './sync';
@@ -36,6 +36,11 @@ export interface Controller {
   last(): void;
   /** Subscribes to position changes; returns an unsubscribe function. */
   onChange(listener: () => void): () => void;
+  /**
+   * Renders a slide to HTML at the given position, applying the deck's templates
+   * and variables (deck metadata plus built-ins like `pageNumber`).
+   */
+  render(slideIndex: number, stepIndex: number, channel?: string): string;
   openWindow(role: Role, channel?: string): void;
   /** Whether the fixed-aspect slide box outline is currently shown. */
   isBoxVisible(): boolean;
@@ -49,10 +54,14 @@ export interface Controller {
   zoomWindow(target: Window, value: number): void;
 }
 
-export function createController(deck: Deck): Controller {
+export function createController(
+  deck: Deck,
+  templates: Record<string, string> = {},
+): Controller {
   const navigation = new Navigation(deck.slides.map((slide) => slide.fragmentCount + 1));
   const slideCount = deck.slides.length;
   const defaultChannel = deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
+  const deckVariables = toStringRecord(deck.metadata);
   const channels = collectChannels(deck, defaultChannel);
   const listeners: Array<() => void> = [];
   const openedWindows: ManagedWindow[] = [];
@@ -140,6 +149,17 @@ export function createController(deck: Deck): Controller {
         }
       };
     },
+    render: (slideIndex: number, stepIndex: number, channel?: string) =>
+      renderSlide(deck.slides[slideIndex], {
+        revealedFragments: stepIndex,
+        channel,
+        templates,
+        variables: {
+          ...deckVariables,
+          pageNumber: String(slideIndex + 1),
+          slideCount: String(slideCount),
+        },
+      }),
     openWindow: (role: Role, channel?: string) => {
       const url = new URL(location.href);
       url.hash = channel ? `${role}/${channel}` : role;
@@ -195,6 +215,20 @@ export function createController(deck: Deck): Controller {
   }
 
   return controller;
+}
+
+/**
+ * Narrows a metadata record to defined string values, so it can seed template
+ * variables without carrying `undefined` entries.
+ */
+function toStringRecord(metadata: Record<string, string | undefined>): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(metadata)) {
+    if (value !== undefined) {
+      result[key] = value;
+    }
+  }
+  return result;
 }
 
 /**

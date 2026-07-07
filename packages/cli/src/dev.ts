@@ -1,6 +1,6 @@
-import { readFileSync, watch, type FSWatcher } from 'node:fs';
-import { createServer, type Server } from 'node:http';
-import { isAbsolute, resolve } from 'node:path';
+import { existsSync, readFileSync, watch, type FSWatcher } from 'node:fs';
+import { createServer } from 'node:http';
+import { isAbsolute, join, resolve } from 'node:path';
 import { resolveDeckStylesheetPath } from '@mapre/node';
 import { buildPresentation, type BuildPresentationOptions } from './build';
 
@@ -45,7 +45,9 @@ export interface DevReporter {
  */
 export function startDevServer(options: DevServerOptions, reporter: DevReporter): DevServerHandle {
   const cwd = options.cwd ?? process.cwd();
-  const slidesDir = resolvePath(cwd, options.slidesDir);
+  const projectDir = resolvePath(cwd, options.projectDir);
+  const slidesDir = join(projectDir, 'slides');
+  const styleDir = join(projectDir, 'style');
   const outFile = resolvePath(cwd, options.outFile);
 
   const server = createServer((request, response) => {
@@ -62,7 +64,7 @@ export function startDevServer(options: DevServerOptions, reporter: DevReporter)
     }
   });
 
-  const watchers = watchSources(slidesDir, () => rebuild(options, reporter));
+  const watchers = watchSources(slidesDir, styleDir, () => rebuild(options, reporter));
 
   const whenReady = new Promise<{ port: number; url: string }>((resolvePromise) => {
     server.listen(options.port, DEFAULT_HOST, () => {
@@ -83,15 +85,24 @@ export function startDevServer(options: DevServerOptions, reporter: DevReporter)
 }
 
 /**
- * Watches the slides directory (recursively) and the deck's stylesheet, if any,
- * invoking `onChange` on any change. Returns the watchers so they can be closed.
+ * Watches the slides directory (recursively) and the optional style directory,
+ * plus the deck's legacy stylesheet if named outside them, invoking `onChange`
+ * on any change. Returns the watchers so they can be closed.
  */
-function watchSources(slidesDir: string, onChange: () => void): FSWatcher[] {
+function watchSources(slidesDir: string, styleDir: string, onChange: () => void): FSWatcher[] {
   const trigger = debounce(onChange, REBUILD_DEBOUNCE_MS);
   const watchers: FSWatcher[] = [watch(slidesDir, { recursive: true }, trigger)];
 
+  if (existsSync(styleDir)) {
+    watchers.push(watch(styleDir, { recursive: true }, trigger));
+  }
+
   const stylesheetPath = safeResolveStylesheetPath(slidesDir);
-  if (stylesheetPath !== undefined && !stylesheetPath.startsWith(slidesDir)) {
+  if (
+    stylesheetPath !== undefined &&
+    !stylesheetPath.startsWith(slidesDir) &&
+    !stylesheetPath.startsWith(styleDir)
+  ) {
     watchers.push(watch(stylesheetPath, trigger));
   }
 

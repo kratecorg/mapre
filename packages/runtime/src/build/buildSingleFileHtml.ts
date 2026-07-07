@@ -22,6 +22,11 @@ export interface BuildSingleFileHtmlOptions {
    */
   extraStyles?: string;
   /**
+   * Optional named HTML templates passed through to the assembler for slides
+   * that select one via their `template` directive.
+   */
+  templates?: Record<string, string>;
+  /**
    * Overrides the document title. Defaults to the deck's front-matter `title`,
    * or a generic fallback when none is set.
    */
@@ -49,6 +54,7 @@ export function buildSingleFileHtml(
     clientScript,
     styles: options.styles,
     extraStyles: options.extraStyles,
+    templates: options.templates,
   });
 }
 

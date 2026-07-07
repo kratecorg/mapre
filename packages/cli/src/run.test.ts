@@ -15,15 +15,15 @@ function captureIo(): { io: CliIo; logs: string[]; errors: string[] } {
 describe('parseBuildArgs', () => {
   it('applies defaults when no arguments are given', () => {
     expect(parseBuildArgs([])).toEqual({
-      slidesDir: 'slides',
+      projectDir: '.',
       outFile: 'dist/index.html',
       title: undefined,
     });
   });
 
-  it('reads a positional slides directory and options', () => {
+  it('reads a positional project directory and options', () => {
     expect(parseBuildArgs(['content', '-o', 'out/talk.html', '--title', 'Hello'])).toEqual({
-      slidesDir: 'content',
+      projectDir: 'content',
       outFile: 'out/talk.html',
       title: 'Hello',
     });
@@ -41,16 +41,16 @@ describe('parseBuildArgs', () => {
 describe('parseDevArgs', () => {
   it('applies defaults including the dev port', () => {
     expect(parseDevArgs([])).toEqual({
-      slidesDir: 'slides',
+      projectDir: '.',
       outFile: 'dist/index.html',
       title: undefined,
       port: 4321,
     });
   });
 
-  it('reads a positional slides directory and a port', () => {
+  it('reads a positional project directory and a port', () => {
     expect(parseDevArgs(['content', '-p', '5000'])).toEqual({
-      slidesDir: 'content',
+      projectDir: 'content',
       outFile: 'dist/index.html',
       title: undefined,
       port: 5000,

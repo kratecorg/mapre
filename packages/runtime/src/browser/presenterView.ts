@@ -1,4 +1,3 @@
-import { renderSlide } from '@mapre/core';
 import { Timer } from '../core/timer';
 import { formatDuration } from '../core/format';
 import type { Controller, ManagedWindow } from './controller';
@@ -85,7 +84,7 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
     const { navigation, deck } = controller;
     const slide = deck.slides[navigation.slideIndex];
 
-    currentBox.innerHTML = renderSlide(slide, { revealedFragments: navigation.stepIndex });
+    currentBox.innerHTML = controller.render(navigation.slideIndex, navigation.stepIndex);
     nextBox.innerHTML = renderNextPreview();
     notesBox.textContent = slide.notes ?? '';
     counter.textContent = `${navigation.slideIndex + 1} / ${deck.slides.length}`;
@@ -115,10 +114,10 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
     const slide = deck.slides[navigation.slideIndex];
 
     if (navigation.stepIndex < slide.fragmentCount) {
-      return renderSlide(slide, { revealedFragments: navigation.stepIndex + 1 });
+      return controller.render(navigation.slideIndex, navigation.stepIndex + 1);
     }
     if (navigation.slideIndex + 1 < deck.slides.length) {
-      return renderSlide(deck.slides[navigation.slideIndex + 1], { revealedFragments: 0 });
+      return controller.render(navigation.slideIndex + 1, 0);
     }
     return '<em>End</em>';
   }

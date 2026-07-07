@@ -24,7 +24,7 @@ function start(): void {
   applyAspectRatio(document.documentElement, deck.metadata.aspect);
 
   const root = requireElement('app');
-  const controller = createController(deck);
+  const controller = createController(deck, readTemplates());
   const parsed = parseHash(location.hash);
   const activeChannel = parsed.channel ?? deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
   const defaultChannel = deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
@@ -85,6 +85,18 @@ function readSource(): string {
     throw new Error('Missing embedded deck source.');
   }
   return JSON.parse(element.textContent) as string;
+}
+
+/**
+ * Reads the inlined named templates, if any. Absent or empty payloads yield an
+ * empty map so decks without templates behave exactly as before.
+ */
+function readTemplates(): Record<string, string> {
+  const element = document.getElementById('mapre-templates');
+  if (!element || !element.textContent) {
+    return {};
+  }
+  return JSON.parse(element.textContent) as Record<string, string>;
 }
 
 function requireElement(id: string): HTMLElement {

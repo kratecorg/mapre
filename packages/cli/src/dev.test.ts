@@ -10,14 +10,17 @@ const silentReporter = { log: () => {}, error: () => {} };
 describe('startDevServer', () => {
   let root: string;
   let slidesDir: string;
+  let styleDir: string;
   let outFile: string;
   let handle: DevServerHandle | undefined;
 
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), 'mapre-dev-'));
     slidesDir = join(root, 'slides');
+    styleDir = join(root, 'style');
     outFile = join(root, 'dist', 'index.html');
     mkdirSync(slidesDir, { recursive: true });
+    mkdirSync(styleDir, { recursive: true });
   });
 
   afterEach(async () => {
@@ -30,9 +33,9 @@ describe('startDevServer', () => {
 
   it('serves the built presentation and reflects a rebuild on the next request', async () => {
     writeFileSync(join(slidesDir, '01.md'), '---\ntitle: Dev Demo\n---\n\n# First');
-    buildPresentation({ slidesDir, outFile });
+    buildPresentation({ projectDir: root, outFile });
 
-    handle = startDevServer({ slidesDir, outFile, port: 0 }, silentReporter);
+    handle = startDevServer({ projectDir: root, outFile, port: 0 }, silentReporter);
     const { url } = await handle.whenReady;
 
     const first = await (await fetch(url)).text();
@@ -40,9 +43,23 @@ describe('startDevServer', () => {
     expect(first).toContain('First');
 
     writeFileSync(join(slidesDir, '01.md'), '---\ntitle: Dev Demo\n---\n\n# Changed');
-    buildPresentation({ slidesDir, outFile });
+    buildPresentation({ projectDir: root, outFile });
 
     const second = await (await fetch(url)).text();
     expect(second).toContain('Changed');
+  });
+
+  it('inlines style-folder css and templates into the build', async () => {
+    writeFileSync(join(slidesDir, '01.md'), '[template: card]: #\n[title: Hi]: #\n\nBody');
+    writeFileSync(join(styleDir, 'theme.css'), '.slide { color: teal; }');
+    writeFileSync(join(styleDir, 'card.html'), '<section><h1>{{title}}</h1>{{content}}</section>');
+    buildPresentation({ projectDir: root, outFile });
+
+    handle = startDevServer({ projectDir: root, outFile, port: 0 }, silentReporter);
+    const { url } = await handle.whenReady;
+
+    const html = await (await fetch(url)).text();
+    expect(html).toContain('.slide { color: teal; }');
+    expect(html).toContain('{{title}}');
   });
 });
