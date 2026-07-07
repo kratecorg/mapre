@@ -165,6 +165,7 @@ Dieselbe Syntax wirkt je nach Position auf drei Ebenen:
 | `defaultBackground`| Deck             | Standard-Hintergrund für alle Folien                             | neu       |
 | `channel`          | Kanal-Abschnitt  | Startet einen kanalspezifischen Inhaltsabschnitt                 | neu       |
 | `background`       | Folie / Kanal    | Hintergrund (Bildpfad oder Farbe) für Folie bzw. Kanal-Abschnitt | neu       |
+| `stylesheet`       | Deck             | Autor-CSS relativ zum Folienordner, wird ins HTML inlined (§9)  | vorhanden |
 | `theme`            | Deck / Folie     | Styling-Theme (siehe §9)                                         | offen     |
 | `duration`         | Folie            | Ziel-/Sollzeit in Minuten für Timer-Slots (siehe §4)            | offen     |
 | `id`               | Folie            | Benannter Anker für Deep-Linking/Sprungmarken (siehe §8)        | offen     |
@@ -244,8 +245,15 @@ Konsequenzen:
 - Syntax-Highlighting optional über `RenderOptions.highlight`.
 - **Barrierefreiheit**: sinnvolle ARIA-Rollen, Tastatur-Bedienbarkeit,
   Respektierung von `prefers-reduced-motion`.
-- **Themes**: austauschbares Styling; Deck-Metadaten dürfen ein Theme wählen.
-  *(Offen: Theme-Mechanismus.)*
+- **Autor-Stylesheet**: Die Deck-Direktive `stylesheet` benennt eine CSS-Datei
+  relativ zum Folienordner. Beim Build liest `@mapre/node` (`loadDeckStyles`)
+  diese Datei und inlined sie **nach** den Baseline-Styles, sodass sie per
+  Kaskade gewinnt — das Ergebnis bleibt eine einzige, in sich geschlossene
+  `.html`. Empfehlung: Regeln auf `.stage`/`.stage .slide` beschränken, damit
+  die Presenter-Ansicht ihr eigenes Styling behält. Beispiel:
+  [`examples/fau-theme/`](../examples/fau-theme/README.md). **Status: implementiert.**
+- **Themes**: benannte Styling-Presets über die `theme`-Direktive.
+  *(Offen: Theme-Mechanismus als Preset-Bündel über CSS-Variablen.)*
 
 ## 10. Zusätzliche Ideen (zur Diskussion)
 

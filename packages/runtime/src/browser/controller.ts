@@ -37,6 +37,10 @@ export interface Controller {
   /** Subscribes to position changes; returns an unsubscribe function. */
   onChange(listener: () => void): () => void;
   openWindow(role: Role, channel?: string): void;
+  /** Whether the fixed-aspect slide box outline is currently shown. */
+  isBoxVisible(): boolean;
+  /** Shows or hides the slide box outline across all synced windows. */
+  setBoxVisible(active: boolean): void;
   /** The currently open child windows, with closed ones pruned. */
   listWindows(): ManagedWindow[];
   /** Subscribes to changes in the set of open windows; returns unsubscribe. */
@@ -54,6 +58,7 @@ export function createController(deck: Deck): Controller {
   const openedWindows: ManagedWindow[] = [];
   const windowListeners: Array<() => void> = [];
   const channelCounts = new Map<string, number>();
+  let boxVisible = false;
 
   const sync = createSync(handleMessage);
 
@@ -62,6 +67,7 @@ export function createController(deck: Deck): Controller {
       kind: 'state',
       slideIndex: navigation.slideIndex,
       stepIndex: navigation.stepIndex,
+      showBox: boxVisible,
     };
   }
 
@@ -91,7 +97,13 @@ export function createController(deck: Deck): Controller {
       return;
     }
 
-    if (navigation.goTo(message.slideIndex ?? 0, message.stepIndex ?? 0)) {
+    const boxChanged = message.showBox !== undefined && message.showBox !== boxVisible;
+    if (message.showBox !== undefined) {
+      boxVisible = message.showBox;
+    }
+
+    const moved = navigation.goTo(message.slideIndex ?? 0, message.stepIndex ?? 0);
+    if (moved || boxChanged) {
       emit(false);
     }
   }
@@ -165,6 +177,14 @@ export function createController(deck: Deck): Controller {
     },
     zoomWindow: (target: Window, value: number) => {
       sync.postTo(target, { kind: 'zoom', value });
+    },
+    isBoxVisible: () => boxVisible,
+    setBoxVisible: (active: boolean) => {
+      if (active === boxVisible) {
+        return;
+      }
+      boxVisible = active;
+      emit(true);
     },
   };
 

@@ -16,7 +16,8 @@ export interface PresentationViewOptions {
   onOpenPresenter: () => void;
 }
 
-const STAGE = '<div class="stage"><div class="slide" id="stage-slide"></div></div>';
+const STAGE =
+  '<div class="stage"><div class="slide-box"><div class="slide" id="stage-slide"></div></div></div>';
 
 const CONTROL_BAR = `
   <footer class="bar">
@@ -45,6 +46,7 @@ export function mountPresentationView(
   root.innerHTML = options.connected ? STAGE : STAGE + CONTROL_BAR;
 
   const slideBox = query(root, '#stage-slide');
+  const box = query(root, '.slide-box');
 
   function render(): void {
     const { navigation, deck } = controller;
@@ -53,6 +55,7 @@ export function mountPresentationView(
       revealedFragments: navigation.stepIndex,
       channel,
     });
+    box.classList.toggle('show-box', controller.isBoxVisible());
     updateBar();
   }
 

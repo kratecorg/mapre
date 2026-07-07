@@ -12,12 +12,20 @@ const TEMPLATE = `
   <div class="presenter">
     <section class="pv-current">
       <div class="pv-label">Current</div>
-      <div class="slide" id="pv-current"></div>
+      <div class="pv-stage">
+        <div class="slide-box" id="pv-current-box">
+          <div class="slide" id="pv-current"></div>
+        </div>
+      </div>
     </section>
     <aside class="pv-side">
       <section class="pv-next">
         <div class="pv-label">Next</div>
-        <div class="slide" id="pv-next"></div>
+        <div class="pv-stage">
+          <div class="slide-box">
+            <div class="slide" id="pv-next"></div>
+          </div>
+        </div>
       </section>
       <section class="pv-notes">
         <div class="pv-label">Notes</div>
@@ -34,6 +42,9 @@ const TEMPLATE = `
         <span id="pv-time">00:00</span>
         <button id="pv-toggle" type="button">Start</button>
         <button id="pv-reset" type="button">Reset</button>
+      </div>
+      <div class="pv-view">
+        <button id="pv-box-toggle" type="button" aria-pressed="false">Box</button>
       </div>
       <div class="pv-channels" id="pv-channels"></div>
       <div class="pv-nav">
@@ -64,6 +75,8 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
   const nextButton = query<HTMLButtonElement>(root, '#next');
   const timeLabel = query(root, '#pv-time');
   const toggleButton = query(root, '#pv-toggle');
+  const boxToggleButton = query(root, '#pv-box-toggle');
+  const currentSlideBox = query(root, '#pv-current-box');
 
   const timer = new Timer();
 
@@ -112,6 +125,18 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
     renderTimer();
   });
 
+  boxToggleButton.addEventListener('click', () => {
+    controller.setBoxVisible(!controller.isBoxVisible());
+    renderBoxState();
+  });
+
+  function renderBoxState(): void {
+    const active = controller.isBoxVisible();
+    currentSlideBox.classList.toggle('show-box', active);
+    boxToggleButton.classList.toggle('is-active', active);
+    boxToggleButton.setAttribute('aria-pressed', String(active));
+  }
+
   mountChannelButtons(query(root, '#pv-channels'), controller);
 
   const windows = mountWindowList(
@@ -120,8 +145,12 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
     controller,
   );
 
-  const unsubscribe = controller.onChange(renderPreview);
+  const unsubscribe = controller.onChange(() => {
+    renderPreview();
+    renderBoxState();
+  });
   renderPreview();
+  renderBoxState();
   renderTimer();
   const intervalId = window.setInterval(renderTimer, TIMER_TICK_MS);
   const windowsIntervalId = window.setInterval(windows.refresh, WINDOWS_TICK_MS);
@@ -209,11 +238,17 @@ function actionButton(text: string, onClick: () => void): HTMLButtonElement {
 }
 
 /**
- * Adds one button per channel that opens a presentation window on that channel.
- * Nothing is rendered for a single-channel deck, where the choice is moot.
+ * Adds buttons that open presentation windows. A single-channel deck gets one
+ * "Open presentation" button; a multi-channel deck gets one button per channel
+ * so each display can show its own channel.
  */
 function mountChannelButtons(container: HTMLElement, controller: Controller): void {
   if (controller.channels.length <= 1) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Open presentation';
+    button.addEventListener('click', () => controller.openWindow('presentation'));
+    container.appendChild(button);
     return;
   }
 

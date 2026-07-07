@@ -22,6 +22,8 @@ export interface SyncMessage {
   slideIndex?: number;
   stepIndex?: number;
   value?: number;
+  /** Whether the fixed-aspect slide box outline should be shown. */
+  showBox?: boolean;
 }
 
 /**
@@ -56,6 +58,7 @@ export function createSync(handler: (message: SyncMessage) => void): Sync {
       slideIndex: data.slideIndex,
       stepIndex: data.stepIndex,
       value: data.value,
+      showBox: data.showBox,
     });
   });
 

@@ -1,4 +1,5 @@
 import { DEFAULT_CHANNEL, parseDeck } from '@mapre/core';
+import { applyAspectRatio } from './aspect';
 import { createController } from './controller';
 import type { Role } from './controller';
 import { mountPresentationView } from './presentationView';
@@ -18,6 +19,8 @@ function start(): void {
   if (deck.metadata.title) {
     document.title = deck.metadata.title;
   }
+
+  applyAspectRatio(document.documentElement, deck.metadata.aspect);
 
   const root = requireElement('app');
   const controller = createController(deck);
