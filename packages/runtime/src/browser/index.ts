@@ -2,6 +2,7 @@ import { DEFAULT_CHANNEL, parseDeck } from '@mapre/core';
 import { applyAspectRatio } from './aspect';
 import { createController } from './controller';
 import type { Role } from './controller';
+import { formatHash, parseHash } from './hash';
 import { mountPresentationView } from './presentationView';
 import { mountPresenterView } from './presenterView';
 
@@ -24,35 +25,58 @@ function start(): void {
 
   const root = requireElement('app');
   const controller = createController(deck);
-  const { role, channel } = parseHash(location.hash);
-  const activeChannel = channel ?? deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
+  const parsed = parseHash(location.hash);
+  const activeChannel = parsed.channel ?? deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
+  const defaultChannel = deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
+
+  // Restore the position from the URL so a reload continues where it left off.
+  // A connected window is corrected moments later by the presenter's handshake.
+  if (parsed.slideIndex !== undefined) {
+    controller.navigation.goTo(parsed.slideIndex, parsed.stepIndex ?? 0);
+  }
 
   // A presentation window opened by a presenter (i.e. it has an opener) is
   // controlled from there, so it hides its own control bar.
   const connected = window.opener != null;
 
   let dispose: (() => void) | undefined;
+  let currentRole: Role = parsed.role;
+
+  function writeHash(): void {
+    const nextHash = formatHash({
+      role: currentRole,
+      channel: activeChannel,
+      defaultChannel,
+      slideIndex: controller.navigation.slideIndex,
+      stepIndex: controller.navigation.stepIndex,
+    });
+    if (location.hash === nextHash) {
+      return;
+    }
+    try {
+      history.replaceState(null, '', nextHash);
+    } catch {
+      // Some browsers reject replaceState under file://; fall back to the hash.
+      location.hash = nextHash;
+    }
+  }
 
   function show(nextRole: Role): void {
     dispose?.();
+    currentRole = nextRole;
     if (nextRole === 'presenter') {
       dispose = mountPresenterView(root, controller);
-      return;
+    } else {
+      dispose = mountPresentationView(root, controller, activeChannel, {
+        connected,
+        onOpenPresenter: () => show('presenter'),
+      });
     }
-
-    dispose = mountPresentationView(root, controller, activeChannel, {
-      connected,
-      onOpenPresenter: () => show('presenter'),
-    });
+    writeHash();
   }
 
-  show(role);
-}
-
-function parseHash(hash: string): { role: Role; channel?: string } {
-  const [rolePart, channelPart] = hash.replace(/^#/, '').split('/');
-  const role: Role = rolePart === 'presenter' ? 'presenter' : 'presentation';
-  return { role, channel: channelPart || undefined };
+  controller.onChange(writeHash);
+  show(parsed.role);
 }
 
 function readSource(): string {
