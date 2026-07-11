@@ -6,12 +6,13 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       formats: ['es'],
-      fileName: 'index',
+      fileName: 'mapre',
     },
     rollupOptions: {
-      // Node builtins and the workspace packages stay external; they are
-      // resolved from node_modules at runtime.
-      external: [/^node:/, '@mapre/core', '@mapre/node', '@mapre/runtime'],
+      // Bundle everything (workspace packages + their deps) into a single,
+      // self-contained file so the CLI can be handed over as one artifact.
+      // Only Node built-ins stay external; they ship with the Node runtime.
+      external: [/^node:/],
       output: {
         banner: '#!/usr/bin/env node',
       },

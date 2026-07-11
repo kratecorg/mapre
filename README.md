@@ -49,8 +49,9 @@ This is a pnpm workspace monorepo.
   deck from a `slides/` folder.
 - `packages/cli` — command-line interface (`@mapre/cli`, `mapre` binary) to
   scaffold a new presentation (`mapre init`) and build a single-file HTML
-  presentation (`mapre build`). See
-  [docs/neue-praesentation.md](docs/neue-praesentation.md).
+  presentation (`mapre build`). Its build produces a single, self-contained
+  `dist/mapre.js` that runs on any machine with Node 20+ — see
+  [Distributing the CLI](#distributing-the-cli).
 - `packages/runtime` — presentation runtime (`@mapre/runtime`). It builds a
   **self-contained, single-file HTML** presentation: the raw deck markdown and a
   bundled browser client (parser + renderer) are inlined, and the deck is
@@ -61,8 +62,7 @@ This is a pnpm workspace monorepo.
   own presentation from markdown files.
 - `examples/single-file` — a runnable example that builds a single-file HTML
   presentation with `@mapre/runtime`. For the quickest way to author your own,
-  use the `mapre` CLI (see
-  [docs/neue-praesentation.md](docs/neue-praesentation.md)).
+  use the `mapre` CLI (see [Distributing the CLI](#distributing-the-cli)).
 - Additional packages (presenter view, window sync, timer, channels) will live
   under `packages/` as they are built, following the
   [runtime spec](spec/runtime.spec.md).
@@ -131,6 +131,34 @@ pnpm build         # build all packages
 
 Continuous integration runs type-check, tests, and build via Gitea Actions
 (`.gitea/workflows/ci.yml`).
+
+## Distributing the CLI
+
+The `mapre` CLI builds into a single, self-contained file that bundles every
+workspace package and its dependencies. The only requirement on the target
+machine is Node 20+ — no `pnpm install`, no `node_modules`, no platform-specific
+binary.
+
+```bash
+pnpm build                                   # builds all packages in order
+# hand over this one file:
+packages/cli/dist/mapre.js
+```
+
+Order matters because the CLI bundle inlines the built output of `@mapre/core`,
+`@mapre/node`, and `@mapre/runtime`, so those must be built first. The root
+`pnpm build` already builds packages in dependency order.
+
+On the receiving machine, run the file directly with Node:
+
+```bash
+node mapre.js init my-talk        # scaffold a presentation folder
+cd my-talk
+node ../mapre.js build            # write dist/index.html
+```
+
+The resulting `dist/index.html` is itself self-contained and opens from
+`file://`, a local web server, or a hosted URL.
 
 ## Status
 

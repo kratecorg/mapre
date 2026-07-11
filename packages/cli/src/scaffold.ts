@@ -35,10 +35,7 @@ function packageManifest(slug: string): unknown {
     private: true,
     type: 'module',
     scripts: {
-      build: 'mapre build slides -o dist/index.html',
-    },
-    devDependencies: {
-      '@mapre/cli': 'workspace:*',
+      build: 'mapre build -o dist/index.html',
     },
   };
 }

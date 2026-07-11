@@ -17,7 +17,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "vite build && esbuild src/browser/index.ts --bundle --format=iife --minify --outfile=dist/client.js",
+    "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit"

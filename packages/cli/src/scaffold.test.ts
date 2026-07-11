@@ -32,8 +32,8 @@ describe('presentationFiles', () => {
     const manifest = JSON.parse(presentationFiles('My Talk')['package.json']);
 
     expect(manifest.name).toBe('my-talk');
-    expect(manifest.scripts.build).toBe('mapre build slides -o dist/index.html');
-    expect(manifest.devDependencies['@mapre/cli']).toBe('workspace:*');
+    expect(manifest.scripts.build).toBe('mapre build -o dist/index.html');
+    expect(manifest.devDependencies).toBeUndefined();
   });
 
   it('embeds the display name in the intro slide front matter', () => {

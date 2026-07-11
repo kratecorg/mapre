@@ -103,7 +103,7 @@ export function run(argv: string[], io: CliIo = DEFAULT_IO): number {
       const args = parseInitArgs(rest);
       const dir = initPresentation(args);
       io.log(`Created presentation -> ${dir}`);
-      io.log("Next: run 'pnpm install', then build with 'mapre build slides'.");
+      io.log("Next: cd into it and run 'mapre build' to produce dist/index.html.");
       return 0;
     }
     case undefined:
