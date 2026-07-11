@@ -32,15 +32,18 @@ export function parseHash(hash: string): HashState {
  * The position is always encoded so a reload restores the exact spot.
  */
 export function formatHash(state: HashState & { defaultChannel: string }): string {
-  const base =
-    state.role === 'presenter'
-      ? 'presenter'
-      : presentationSegment(state.channel ?? state.defaultChannel, state.defaultChannel);
+  const channel = state.channel ?? state.defaultChannel;
+  const base = roleSegment(state.role, channel, state.defaultChannel);
   return `#${base}${formatPosition(state.slideIndex ?? 0, state.stepIndex ?? 0)}`;
 }
 
-function presentationSegment(channel: string, defaultChannel: string): string {
-  return channel === defaultChannel ? 'presentation' : `presentation/${channel}`;
+/**
+ * Encodes the role and its channel as a hash path. The channel is appended only
+ * when it differs from the default, so `presenter`/`presentation` stay clean and
+ * a switched channel becomes e.g. `presenter/de` or `presentation/en`.
+ */
+function roleSegment(role: Role, channel: string, defaultChannel: string): string {
+  return channel === defaultChannel ? role : `${role}/${channel}`;
 }
 
 /**

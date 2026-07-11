@@ -26,8 +26,8 @@ function start(): void {
   const root = requireElement('app');
   const controller = createController(deck, readTemplates());
   const parsed = parseHash(location.hash);
-  const activeChannel = parsed.channel ?? deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
   const defaultChannel = deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
+  let activeChannel = parsed.channel ?? defaultChannel;
 
   // Restore the position from the URL so a reload continues where it left off.
   // A connected window is corrected moments later by the presenter's handshake.
@@ -65,7 +65,13 @@ function start(): void {
     dispose?.();
     currentRole = nextRole;
     if (nextRole === 'presenter') {
-      dispose = mountPresenterView(root, controller);
+      dispose = mountPresenterView(root, controller, {
+        channel: activeChannel,
+        onChannelChange: (channel) => {
+          activeChannel = channel;
+          writeHash();
+        },
+      });
     } else {
       dispose = mountPresentationView(root, controller, activeChannel, {
         connected,

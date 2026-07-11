@@ -45,6 +45,7 @@ const TEMPLATE = `
       <div class="pv-view">
         <button id="pv-box-toggle" type="button" aria-pressed="false">Box</button>
       </div>
+      <div class="pv-channel-view" id="pv-channel-view"></div>
       <div class="pv-channels" id="pv-channels"></div>
       <div class="pv-nav">
         <button id="prev" type="button" aria-label="Previous">&#9664;</button>
@@ -55,6 +56,16 @@ const TEMPLATE = `
   </div>`;
 
 /**
+ * Options for {@link mountPresenterView}.
+ */
+export interface PresenterViewOptions {
+  /** The channel whose content the presenter previews render initially. */
+  channel: string;
+  /** Called when the presenter picks a different channel to preview. */
+  onChannelChange: (channel: string) => void;
+}
+
+/**
  * Mounts the presenter view: the current slide, a preview of what the next step
  * reveals, speaker notes, a timer, and navigation controls. Navigation stays in
  * sync with the presentation windows via the controller.
@@ -62,9 +73,15 @@ const TEMPLATE = `
  * Returns a dispose function that detaches the view from the controller and
  * stops the timer interval.
  */
-export function mountPresenterView(root: HTMLElement, controller: Controller): () => void {
+export function mountPresenterView(
+  root: HTMLElement,
+  controller: Controller,
+  options: PresenterViewOptions,
+): () => void {
   root.innerHTML = TEMPLATE;
   document.title = `${controller.deck.metadata.title ?? 'mapre'} \u2013 Presenter`;
+
+  let channel = options.channel;
 
   const currentBox = query(root, '#pv-current');
   const nextBox = query(root, '#pv-next');
@@ -84,7 +101,7 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
     const { navigation, deck } = controller;
     const slide = deck.slides[navigation.slideIndex];
 
-    currentBox.innerHTML = controller.render(navigation.slideIndex, navigation.stepIndex);
+    currentBox.innerHTML = controller.render(navigation.slideIndex, navigation.stepIndex, channel);
     nextBox.innerHTML = renderNextPreview();
     notesBox.textContent = slide.notes ?? '';
     counter.textContent = `${navigation.slideIndex + 1} / ${deck.slides.length}`;
@@ -114,10 +131,10 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
     const slide = deck.slides[navigation.slideIndex];
 
     if (navigation.stepIndex < slide.fragmentCount) {
-      return controller.render(navigation.slideIndex, navigation.stepIndex + 1);
+      return controller.render(navigation.slideIndex, navigation.stepIndex + 1, channel);
     }
     if (navigation.slideIndex + 1 < deck.slides.length) {
-      return controller.render(navigation.slideIndex + 1, 0);
+      return controller.render(navigation.slideIndex + 1, 0, channel);
     }
     return '<em>End</em>';
   }
@@ -151,6 +168,17 @@ export function mountPresenterView(root: HTMLElement, controller: Controller): (
   }
 
   mountChannelButtons(query(root, '#pv-channels'), controller);
+
+  const channelSwitch = mountChannelSwitch(query(root, '#pv-channel-view'), controller, (selected) => {
+    if (selected === channel) {
+      return;
+    }
+    channel = selected;
+    channelSwitch.setActive(channel);
+    renderPreview();
+    options.onChannelChange(channel);
+  });
+  channelSwitch.setActive(channel);
 
   const windows = mountWindowList(
     query(root, '#pv-windows'),
@@ -277,4 +305,54 @@ function mountChannelButtons(container: HTMLElement, controller: Controller): vo
     button.addEventListener('click', () => controller.openWindow('presentation', channel));
     container.appendChild(button);
   }
+}
+
+/**
+ * A mounted channel switch, exposing a way to reflect the active channel in the
+ * button highlight.
+ */
+interface ChannelSwitch {
+  setActive(channel: string): void;
+}
+
+/**
+ * Adds buttons that switch which channel the presenter's own previews render.
+ * This is local to the presenter window and does not affect audience windows;
+ * the choice is persisted by the caller via {@link PresenterViewOptions}. A
+ * single-channel deck gets no switch (there is nothing to choose).
+ */
+function mountChannelSwitch(
+  container: HTMLElement,
+  controller: Controller,
+  onSelect: (channel: string) => void,
+): ChannelSwitch {
+  if (controller.channels.length <= 1) {
+    return { setActive: () => {} };
+  }
+
+  const label = document.createElement('span');
+  label.className = 'pv-label';
+  label.textContent = 'View';
+  container.appendChild(label);
+
+  const buttons = new Map<string, HTMLButtonElement>();
+  for (const channel of controller.channels) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = channel;
+    button.setAttribute('aria-pressed', 'false');
+    button.addEventListener('click', () => onSelect(channel));
+    buttons.set(channel, button);
+    container.appendChild(button);
+  }
+
+  return {
+    setActive(active: string): void {
+      for (const [name, button] of buttons) {
+        const isActive = name === active;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      }
+    },
+  };
 }

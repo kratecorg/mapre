@@ -190,5 +190,7 @@ export const STYLES = `
   .pv-timer, .pv-nav, .pv-view { display: flex; align-items: center; gap: 0.75rem; }
   #pv-box-toggle.is-active { background: #38bdf8; color: #0f172a; }
   .pv-channels { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .pv-channel-view { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .pv-channel-view button.is-active { background: #38bdf8; color: #0f172a; }
   #pv-time { font-variant-numeric: tabular-nums; font-size: 1.75rem; }
 `;

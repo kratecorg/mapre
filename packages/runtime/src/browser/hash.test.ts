@@ -14,6 +14,10 @@ describe('parseHash', () => {
     expect(parseHash('#presentation/de')).toEqual({ role: 'presentation', channel: 'de' });
   });
 
+  it('reads a presenter channel', () => {
+    expect(parseHash('#presenter/de')).toEqual({ role: 'presenter', channel: 'de' });
+  });
+
   it('reads a 1-based slide position as a zero-based index', () => {
     expect(parseHash('#presenter@3')).toEqual({
       role: 'presenter',
@@ -58,6 +62,28 @@ describe('formatHash', () => {
       stepIndex: 0,
     });
     expect(hash).toBe('#presentation/de@3');
+  });
+
+  it('includes a non-default channel for the presenter role', () => {
+    const hash = formatHash({
+      role: 'presenter',
+      channel: 'de',
+      defaultChannel: 'main',
+      slideIndex: 2,
+      stepIndex: 1,
+    });
+    expect(hash).toBe('#presenter/de@3.1');
+  });
+
+  it('omits the channel for the presenter role when it equals the default', () => {
+    const hash = formatHash({
+      role: 'presenter',
+      channel: 'main',
+      defaultChannel: 'main',
+      slideIndex: 0,
+      stepIndex: 0,
+    });
+    expect(hash).toBe('#presenter@1');
   });
 
   it('encodes the reveal step when present', () => {
