@@ -164,7 +164,7 @@ Dieselbe Syntax wirkt je nach Position auf drei Ebenen:
 | `defaultChannel`   | Deck             | Kanal für unmarkierten Inhalt (sonst `main`)                     | neu       |
 | `defaultBackground`| Deck             | Standard-Hintergrund für alle Folien                             | neu       |
 | `channel`          | Kanal-Abschnitt  | Startet einen kanalspezifischen Inhaltsabschnitt                 | neu       |
-| `background`       | Folie / Kanal    | Hintergrund (Bildpfad oder Farbe) für Folie bzw. Kanal-Abschnitt | neu       |
+| `background`       | Folie / Kanal    | Hintergrund (Bildpfad oder Farbe) für Folie bzw. Kanal-Abschnitt | vorhanden |
 | `stylesheet`       | Deck             | Autor-CSS relativ zum Folienordner, wird ins HTML inlined (§9)  | vorhanden |
 | `template`         | Folie            | Wählt einen HTML-Folienmaster aus `style/` (§9)                 | vorhanden |
 | `theme`            | Deck / Folie     | Styling-Theme (siehe §9)                                         | offen     |
@@ -268,6 +268,24 @@ Konsequenzen:
   optional `style/` (alle `*.css` werden inlined, alle `*.html` als Master
   registriert). `mapre build`/`mapre dev` erwarten den Projektordner (Default
   `.`) und fragen die Unterordner nicht ab.
+- **Autoren-Markup für CSS-Klassen**: `.klasse[Inhalt]` hängt CSS-Klassen an
+  einen Bereich; mehrere Klassen als `.a.b[Inhalt]`. Der Wrapper richtet sich
+  danach, wie der Inhalt beginnt:
+  - **Inline** (Inhalt auf derselben Zeile): `.red[Wort]` →
+    `<span class="red">Wort</span>`.
+  - **Block** (Zeilenumbruch direkt nach `[`): `.left-col[` + Umbruch →
+    `<div class="left-col"> … </div>`; darf Absätze, Listen und Überschriften
+    enthalten (ein `<span>` nicht). Damit lassen sich z. B. Spalten bauen
+    (`.two-cols[⏎ … ⏎]` + CSS `column-count`, oder `.left-col`/`.right-col` per
+    `float`/`grid`).
+  - Verschachtelung und Markdown im Inhalt werden unterstützt; Code-Spans und
+    Fenced-Code bleiben unangetastet. Bilder werden als normales `![alt](src)`
+    gesetzt und über eine umschließende Klasse + CSS positioniert/skaliert.
+  - **Status: implementiert.**
+- **Folien-Hintergrund** (`[background: …]: #`): Ein Farbwert (`#…`, `rgb()`,
+  `hsl()`) füllt die Folie flächig; jeder andere Wert wird als Bild-URL
+  behandelt. Der Hintergrund liegt hinter dem Inhalt und funktioniert als
+  Alternative zu einem Template. **Status: implementiert.**
 
 ## 10. Zusätzliche Ideen (zur Diskussion)
 

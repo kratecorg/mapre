@@ -56,4 +56,62 @@ describe('renderSlide', () => {
     expect(html).not.toContain('class="token');
     expect(html).toContain('language-java');
   });
+
+  it('turns inline class markup into spans', () => {
+    const slide = parseSlide('das ist .red[rot]', 0);
+
+    expect(renderSlide(slide)).toContain('<span class="red">rot</span>');
+  });
+
+  it('prepends an image background layer for the background directive', () => {
+    const slide = parseSlide('[background: bg.png]: #\n\n# Hi', 0);
+
+    const html = renderSlide(slide);
+
+    expect(html).toContain('class="slide-bg"');
+    expect(html).toContain('background-image:url("bg.png")');
+  });
+
+  it('uses a solid colour background when the value is a colour', () => {
+    const slide = parseSlide('[background: #0a2540]: #\n\nBody', 0);
+
+    expect(renderSlide(slide)).toContain('background-color:#0a2540');
+  });
+
+  it('applies a deck-level template when the slide sets none', () => {
+    const slide = parseSlide('# Hi', 0);
+
+    const html = renderSlide(slide, {
+      templates: { card: '<section>{{content}}</section>' },
+      variables: { template: 'card' },
+    });
+
+    expect(html).toBe('<section><h1>Hi</h1>\n</section>');
+  });
+
+  it('lets a slide opt out of the deck template with "none"', () => {
+    const slide = parseSlide('[template: none]: #\n\n# Hi', 0);
+
+    const html = renderSlide(slide, {
+      templates: { card: '<section>{{content}}</section>' },
+      variables: { template: 'card' },
+    });
+
+    expect(html).not.toContain('<section>');
+    expect(html).toContain('<h1>Hi</h1>');
+  });
+
+  it('lets a slide template override the deck default', () => {
+    const slide = parseSlide('[template: hero]: #\n\n# Hi', 0);
+
+    const html = renderSlide(slide, {
+      templates: {
+        card: '<section>{{content}}</section>',
+        hero: '<header>{{content}}</header>',
+      },
+      variables: { template: 'card' },
+    });
+
+    expect(html).toContain('<header>');
+  });
 });

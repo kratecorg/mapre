@@ -19,3 +19,4 @@ export {
 
 export { renderSlide } from './render/renderSlide';
 export { applyTemplate } from './render/applyTemplate';
+export { applyMarkup } from './render/markup';

@@ -40,11 +40,20 @@ export const STYLES = `
   }
   .slide-box.show-box { outline: 2px solid #38bdf8; outline-offset: -1px; }
   .slide {
+    position: relative;
+    isolation: isolate;
     width: 100%;
     height: 100%;
     padding: 5cqh 6cqw;
     overflow: hidden;
     font-size: calc(var(--scale) * 4.3cqh);
+  }
+  .slide-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
   }
   .slide h1 { color: #38bdf8; }
   .slide pre {

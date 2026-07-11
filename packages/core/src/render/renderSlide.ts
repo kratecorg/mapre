@@ -8,6 +8,7 @@ import 'prismjs/components/prism-json.js';
 import type { RenderOptions, Slide } from '../types';
 import { postprocessFragments, preprocessFragments } from '../parser/fragments';
 import { applyTemplate } from './applyTemplate';
+import { applyMarkup } from './markup';
 
 marked.setOptions({ gfm: true, breaks: false });
 
@@ -23,7 +24,8 @@ export function renderSlide(slide: Slide, options: RenderOptions = {}): string {
   const highlight = options.highlight ?? true;
   const source = selectChannelContent(slide, options.channel);
 
-  const withFragments = preprocessFragments(source, revealed);
+  const withMarkup = applyMarkup(source);
+  const withFragments = preprocessFragments(withMarkup, revealed);
   let html = marked.parse(withFragments) as string;
   html = postprocessFragments(html);
 
@@ -31,17 +33,50 @@ export function renderSlide(slide: Slide, options: RenderOptions = {}): string {
     html = applySyntaxHighlighting(html);
   }
 
-  return wrapInTemplate(slide, html, options);
+  html = wrapInTemplate(slide, html, options);
+  return withBackground(slide, html);
 }
 
 /**
- * Wraps the rendered body in the slide's selected template, if any. The slide's
- * `template` directive names a template from {@link RenderOptions.templates};
- * when it is absent or unknown, the plain body is returned unchanged.
+ * Prepends a full-slide background layer when the slide sets a `background`
+ * directive. A value that looks like a CSS color paints a solid colour;
+ * anything else is treated as an image URL. The layer sits behind the content.
+ */
+function withBackground(slide: Slide, html: string): string {
+  const background = slide.metadata.background;
+  if (background === undefined || background.trim() === '') {
+    return html;
+  }
+
+  return `<div class="slide-bg" style="${backgroundStyle(background.trim())}"></div>${html}`;
+}
+
+const COLOR_PATTERN = /^(#[0-9a-fA-F]{3,8}|(?:rgb|hsl)a?\([^)"]*\))$/;
+
+function backgroundStyle(value: string): string {
+  if (COLOR_PATTERN.test(value)) {
+    return `background-color:${value}`;
+  }
+
+  const url = value.replace(/["\\)]/g, '').replace(/\s+/g, ' ');
+  return `background-image:url("${url}");background-size:cover;background-position:center`;
+}
+
+/**
+ * Wraps the rendered body in the selected template, if any. A slide picks a
+ * template through its `template` directive; when it sets none, a deck-level
+ * `template` (passed via {@link RenderOptions.variables}) applies as the default.
+ * A slide can opt out of a deck default with `template: none`. An absent or
+ * unknown template leaves the plain body unchanged.
  */
 function wrapInTemplate(slide: Slide, html: string, options: RenderOptions): string {
-  const templateName = slide.metadata.template;
-  if (templateName === undefined || options.templates === undefined) {
+  const templateName = slide.metadata.template ?? options.variables?.template;
+  if (
+    templateName === undefined ||
+    templateName === '' ||
+    templateName === 'none' ||
+    options.templates === undefined
+  ) {
     return html;
   }
 
