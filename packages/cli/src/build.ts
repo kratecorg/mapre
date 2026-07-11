@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
-import { loadDeckSource, loadDeckStyles, loadStyleAssets } from '@mapre/node';
+import { copyResources, loadDeckSource, loadDeckStyles, loadStyleAssets } from '@mapre/node';
 import { buildSingleFileHtml } from '@mapre/runtime';
 
 /**
@@ -23,15 +23,20 @@ export interface BuildPresentationOptions {
 /**
  * Builds a self-contained single-file HTML presentation from a project folder
  * and writes it to disk. The project has a fixed layout: `slides/` holds the
- * markdown, and an optional `style/` folder holds CSS and HTML templates.
- * Returns the absolute path of the written file.
+ * markdown, an optional `style/` folder holds CSS and HTML templates, and an
+ * optional `resources/` folder holds static assets (images) that are copied
+ * next to the output HTML so they can be referenced with document-relative
+ * paths (e.g. `resources/photo.jpg`). Returns the absolute path of the written
+ * file.
  */
 export function buildPresentation(options: BuildPresentationOptions): string {
   const cwd = options.cwd ?? process.cwd();
   const projectDir = resolvePath(cwd, options.projectDir);
   const slidesDir = join(projectDir, 'slides');
   const styleDir = join(projectDir, 'style');
+  const resourcesDir = join(projectDir, 'resources');
   const outFile = resolvePath(cwd, options.outFile);
+  const outDir = dirname(outFile);
 
   const markdown = loadDeckSource(slidesDir);
   if (markdown.trim() === '') {
@@ -42,8 +47,9 @@ export function buildPresentation(options: BuildPresentationOptions): string {
   const extraStyles = combineStyles(css, loadDeckStyles(slidesDir));
   const html = buildSingleFileHtml(markdown, { title: options.title, extraStyles, templates });
 
-  mkdirSync(dirname(outFile), { recursive: true });
+  mkdirSync(outDir, { recursive: true });
   writeFileSync(outFile, html, 'utf8');
+  copyResources(resourcesDir, join(outDir, 'resources'));
 
   return outFile;
 }

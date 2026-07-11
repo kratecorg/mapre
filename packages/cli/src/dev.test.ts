@@ -62,4 +62,44 @@ describe('startDevServer', () => {
     expect(html).toContain('.slide { color: teal; }');
     expect(html).toContain('{{title}}');
   });
+
+  it('serves a resources file with the matching content type', async () => {
+    writeFileSync(join(slidesDir, '01.md'), '# Title');
+    const resourcesDir = join(root, 'resources');
+    mkdirSync(resourcesDir, { recursive: true });
+    writeFileSync(join(resourcesDir, 'photo.jpg'), 'jpeg-bytes');
+    buildPresentation({ projectDir: root, outFile });
+
+    handle = startDevServer({ projectDir: root, outFile, port: 0 }, silentReporter);
+    const { url } = await handle.whenReady;
+
+    const response = await fetch(new URL('resources/photo.jpg', url));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/jpeg');
+    expect(await response.text()).toBe('jpeg-bytes');
+  });
+
+  it('returns 404 for a missing resource', async () => {
+    writeFileSync(join(slidesDir, '01.md'), '# Title');
+    buildPresentation({ projectDir: root, outFile });
+
+    handle = startDevServer({ projectDir: root, outFile, port: 0 }, silentReporter);
+    const { url } = await handle.whenReady;
+
+    const response = await fetch(new URL('resources/missing.png', url));
+    expect(response.status).toBe(404);
+  });
+
+  it('rejects path traversal out of the resources folder', async () => {
+    writeFileSync(join(slidesDir, '01.md'), '# Title');
+    writeFileSync(join(root, 'secret.txt'), 'top-secret');
+    mkdirSync(join(root, 'resources'), { recursive: true });
+    buildPresentation({ projectDir: root, outFile });
+
+    handle = startDevServer({ projectDir: root, outFile, port: 0 }, silentReporter);
+    const { url } = await handle.whenReady;
+
+    const response = await fetch(`${url}resources/..%2fsecret.txt`);
+    expect(response.status).not.toBe(200);
+  });
 });
