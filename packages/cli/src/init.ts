@@ -15,9 +15,9 @@ export interface InitPresentationOptions {
 }
 
 /**
- * Scaffolds a new presentation folder with sample slides and the config needed
- * to build it via `mapre build`. Returns the absolute path of the created
- * directory. Throws when the target directory already exists.
+ * Scaffolds a new presentation folder with sample slides ready to build via
+ * `mapre build`. Returns the absolute path of the created directory. Throws when
+ * the target directory already exists.
  */
 export function initPresentation(options: InitPresentationOptions): string {
   const cwd = options.cwd ?? process.cwd();

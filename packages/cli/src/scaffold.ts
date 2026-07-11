@@ -4,54 +4,10 @@
  * without touching the filesystem.
  */
 export function presentationFiles(name: string): Record<string, string> {
-  const slug = toSlug(name);
-
   return {
-    'package.json': `${JSON.stringify(packageManifest(slug), null, 2)}\n`,
-    'tsconfig.json': `${JSON.stringify(tsconfigManifest(), null, 2)}\n`,
     '.gitignore': 'dist\n',
     'slides/01-intro.md': introSlide(name),
     'slides/02-agenda.md': agendaSlide(),
-  };
-}
-
-/**
- * Converts a free-form name into a filesystem- and package-friendly slug.
- */
-export function toSlug(name: string): string {
-  const slug = name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-  return slug === '' ? 'presentation' : slug;
-}
-
-function packageManifest(slug: string): unknown {
-  return {
-    name: slug,
-    version: '0.0.0',
-    private: true,
-    type: 'module',
-    scripts: {
-      build: 'mapre build -o dist/index.html',
-    },
-  };
-}
-
-function tsconfigManifest(): unknown {
-  return {
-    compilerOptions: {
-      target: 'ES2022',
-      module: 'ESNext',
-      moduleResolution: 'bundler',
-      strict: true,
-      types: ['node'],
-      noEmit: true,
-    },
-    include: ['**/*.ts'],
-    exclude: ['node_modules', 'dist'],
   };
 }
 

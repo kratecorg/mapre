@@ -18,10 +18,8 @@ describe('initPresentation', () => {
   it('writes the scaffold files into a new directory', () => {
     const target = initPresentation({ targetDir: 'my-talk', cwd: workDir });
 
-    const manifest = JSON.parse(readFileSync(join(target, 'package.json'), 'utf8'));
     const intro = readFileSync(join(target, 'slides', '01-intro.md'), 'utf8');
 
-    expect(manifest.name).toBe('my-talk');
     expect(intro).toContain('# my-talk');
   });
 
