@@ -41,4 +41,14 @@ describe('parseDeck', () => {
     expect(deck.slides).toHaveLength(1);
     expect(deck.slides[0].content).toBe('# Only');
   });
+
+  it('treats --- as a separator with Windows CRLF line endings', () => {
+    const markdown = '# One\r\n\r\n---\r\n\r\n# Two';
+
+    const deck = parseDeck(markdown);
+
+    expect(deck.slides).toHaveLength(2);
+    expect(deck.slides[0].content).toBe('# One');
+    expect(deck.slides[1].content).toBe('# Two');
+  });
 });
