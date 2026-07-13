@@ -2,7 +2,7 @@ import { existsSync, readFileSync, statSync, watch, type FSWatcher } from 'node:
 import { createServer, type ServerResponse } from 'node:http';
 import { extname, isAbsolute, join, resolve, sep } from 'node:path';
 import { resolveDeckStylesheetPath } from '@mapre/node';
-import { buildPresentation, type BuildPresentationOptions } from './build';
+import { buildPresentation, resolveProjectDirs, type BuildPresentationOptions } from './build';
 
 const DEFAULT_HOST = '127.0.0.1';
 const REBUILD_DEBOUNCE_MS = 100;
@@ -68,10 +68,7 @@ export interface DevReporter {
  */
 export function startDevServer(options: DevServerOptions, reporter: DevReporter): DevServerHandle {
   const cwd = options.cwd ?? process.cwd();
-  const projectDir = resolvePath(cwd, options.projectDir);
-  const slidesDir = join(projectDir, 'slides');
-  const styleDir = join(projectDir, 'style');
-  const resourcesDir = join(projectDir, 'resources');
+  const { slidesDir, styleDir, resourcesDir } = resolveProjectDirs(cwd, options);
   const outFile = resolvePath(cwd, options.outFile);
 
   const server = createServer((request, response) => {

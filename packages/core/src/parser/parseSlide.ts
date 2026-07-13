@@ -1,4 +1,4 @@
-import type { Slide } from '../types';
+import type { Slide, SlideMetadata } from '../types';
 import { splitChannels, DEFAULT_CHANNEL } from './channels';
 import { detectMaxFragmentLevel } from './fragments';
 import { extractSlideMetadata } from './metadata';
@@ -36,7 +36,16 @@ export function parseSlide(
     notes = notesMatch[2].trim();
   }
 
-  const channels = splitChannels(contentAndChannels, defaultChannel);
+  const channelSources = splitChannels(contentAndChannels, defaultChannel);
+  const channels: Record<string, string> = {};
+  const channelMetadata: Record<string, SlideMetadata> = {};
+  for (const [channel, source] of Object.entries(channelSources)) {
+    const extracted = extractSlideMetadata(source);
+    channels[channel] = extracted.body;
+    if (Object.keys(extracted.metadata).length > 0) {
+      channelMetadata[channel] = extracted.metadata;
+    }
+  }
   const content = channels[defaultChannel] ?? '';
 
   return {
@@ -46,6 +55,7 @@ export function parseSlide(
     fragmentCount: computeFragmentCount(channels),
     channels,
     metadata,
+    channelMetadata,
   };
 }
 

@@ -58,8 +58,8 @@ function backgroundStyle(value: string): string {
     return `background-color:${value}`;
   }
 
-  const url = value.replace(/["\\)]/g, '').replace(/\s+/g, ' ');
-  return `background-image:url("${url}");background-size:cover;background-position:center`;
+  const url = value.replace(/['"\\)]/g, '').replace(/\s+/g, ' ');
+  return `background-image:url('${url}');background-size:cover;background-position:center`;
 }
 
 /**
@@ -70,7 +70,8 @@ function backgroundStyle(value: string): string {
  * unknown template leaves the plain body unchanged.
  */
 function wrapInTemplate(slide: Slide, html: string, options: RenderOptions): string {
-  const templateName = slide.metadata.template ?? options.variables?.template;
+  const metadata = mergeChannelMetadata(slide, options.channel);
+  const templateName = metadata.template ?? options.variables?.template;
   if (
     templateName === undefined ||
     templateName === '' ||
@@ -85,8 +86,29 @@ function wrapInTemplate(slide: Slide, html: string, options: RenderOptions): str
     return html;
   }
 
-  const variables = { ...(options.variables ?? {}), ...slide.metadata };
+  const variables = { ...(options.variables ?? {}), ...metadata };
   return applyTemplate(template, variables, html);
+}
+
+/**
+ * Merges the slide's own metadata with the metadata of the requested channel.
+ * Channel metadata wins, so a channel can override `title`, `subheadline` or
+ * even the `template` for its own rendering.
+ */
+function mergeChannelMetadata(
+  slide: Slide,
+  channel: string | undefined,
+): Record<string, string> {
+  if (channel === undefined) {
+    return slide.metadata;
+  }
+
+  const channelMetadata = slide.channelMetadata[channel];
+  if (channelMetadata === undefined) {
+    return slide.metadata;
+  }
+
+  return { ...slide.metadata, ...channelMetadata };
 }
 
 /**

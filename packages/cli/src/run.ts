@@ -18,6 +18,9 @@ export interface BuildArgs {
   projectDir: string;
   outFile: string;
   title?: string;
+  slidesDir?: string;
+  styleDir?: string;
+  resourcesDir?: string;
 }
 
 /**
@@ -27,6 +30,9 @@ export interface DevArgs {
   projectDir: string;
   outFile: string;
   title?: string;
+  slidesDir?: string;
+  styleDir?: string;
+  resourcesDir?: string;
   port: number;
 }
 
@@ -55,23 +61,32 @@ const HELP_TEXT = [
   '  mapre build [projectDir] [options]   Build a single-file HTML presentation',
   '  mapre dev [projectDir] [options]     Build, serve, and rebuild on change',
   '',
-  'A project has a fixed layout: a slides/ folder (markdown), an optional',
+  'A project has a default layout: a slides/ folder (markdown), an optional',
   'style/ folder (CSS and HTML templates), and an optional resources/ folder',
   '(images and other assets, copied next to the output and referenced as',
-  'resources/<file>). projectDir defaults to the current directory.',
+  'resources/<file>). projectDir defaults to the current directory. Each folder',
+  'can be pointed elsewhere with --slides, --style and --resources, e.g. to',
+  'build several decks that share one style/ and resources/ folder.',
   '',
   'build options:',
-  '  -o, --out <file>     Output HTML file (default: dist/index.html)',
-  '  -t, --title <title>  Override the document title',
+  '  -o, --out <file>       Output HTML file (default: dist/index.html)',
+  '  -t, --title <title>    Override the document title',
+  '  --slides <dir>         Slides folder (default: <projectDir>/slides)',
+  '  --style <dir>          Style folder (default: <projectDir>/style)',
+  '  --resources <dir>      Resources folder (default: <projectDir>/resources)',
   '',
   'dev options:',
-  '  -o, --out <file>     Output HTML file (default: dist/index.html)',
-  '  -t, --title <title>  Override the document title',
-  '  -p, --port <port>    Port to serve on (default: 4321)',
+  '  -o, --out <file>       Output HTML file (default: dist/index.html)',
+  '  -t, --title <title>    Override the document title',
+  '  --slides <dir>         Slides folder (default: <projectDir>/slides)',
+  '  --style <dir>          Style folder (default: <projectDir>/style)',
+  '  --resources <dir>      Resources folder (default: <projectDir>/resources)',
+  '  -p, --port <port>      Port to serve on (default: 4321)',
   '',
   'Examples:',
   '  mapre init my-talk',
   '  mapre build -o dist/index.html',
+  '  mapre build --slides slides/H18 -o dist/H18/index.html',
   '  mapre dev -p 4321',
 ].join('\n');
 
@@ -96,7 +111,7 @@ export function run(argv: string[], io: CliIo = DEFAULT_IO): number {
       const server = startDevServer(args, io);
       server.whenReady.then(({ url }) => {
         io.log(`Dev server -> ${url}`);
-        io.log(`Watching ${args.projectDir}/slides — edit markdown, then reload the page.`);
+        io.log(`Watching ${args.slidesDir ?? `${args.projectDir}/slides`} — edit markdown, then reload the page.`);
       });
       return 0;
     }
@@ -129,6 +144,9 @@ export function parseBuildArgs(args: string[]): BuildArgs {
   const positionals: string[] = [];
   let outFile = DEFAULT_OUT_FILE;
   let title: string | undefined;
+  let slidesDir: string | undefined;
+  let styleDir: string | undefined;
+  let resourcesDir: string | undefined;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -137,6 +155,15 @@ export function parseBuildArgs(args: string[]): BuildArgs {
       index += 1;
     } else if (arg === '-t' || arg === '--title') {
       title = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '--slides') {
+      slidesDir = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '--style') {
+      styleDir = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '--resources') {
+      resourcesDir = requireValue(arg, args[index + 1]);
       index += 1;
     } else if (arg.startsWith('-')) {
       throw new Error(`Unknown option: ${arg}`);
@@ -149,6 +176,9 @@ export function parseBuildArgs(args: string[]): BuildArgs {
     projectDir: positionals[0] ?? DEFAULT_PROJECT_DIR,
     outFile,
     title,
+    slidesDir,
+    styleDir,
+    resourcesDir,
   };
 }
 
@@ -159,6 +189,9 @@ export function parseDevArgs(args: string[]): DevArgs {
   const positionals: string[] = [];
   let outFile = DEFAULT_OUT_FILE;
   let title: string | undefined;
+  let slidesDir: string | undefined;
+  let styleDir: string | undefined;
+  let resourcesDir: string | undefined;
   let port = DEFAULT_DEV_PORT;
 
   for (let index = 0; index < args.length; index += 1) {
@@ -168,6 +201,15 @@ export function parseDevArgs(args: string[]): DevArgs {
       index += 1;
     } else if (arg === '-t' || arg === '--title') {
       title = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '--slides') {
+      slidesDir = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '--style') {
+      styleDir = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '--resources') {
+      resourcesDir = requireValue(arg, args[index + 1]);
       index += 1;
     } else if (arg === '-p' || arg === '--port') {
       port = parsePort(requireValue(arg, args[index + 1]));
@@ -183,6 +225,9 @@ export function parseDevArgs(args: string[]): DevArgs {
     projectDir: positionals[0] ?? DEFAULT_PROJECT_DIR,
     outFile,
     title,
+    slidesDir,
+    styleDir,
+    resourcesDir,
     port,
   };
 }

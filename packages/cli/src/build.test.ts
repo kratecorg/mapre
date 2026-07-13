@@ -40,4 +40,25 @@ describe('buildPresentation', () => {
     expect(existsSync(outFile)).toBe(true);
     expect(existsSync(join(dirname(outFile), 'resources'))).toBe(false);
   });
+
+  it('honors per-folder overrides and copies resources next to the output', () => {
+    const h18Slides = join(root, 'slides', 'H18');
+    const sharedResources = join(root, 'resources');
+    const h18Out = join(root, 'dist', 'H18', 'index.html');
+    mkdirSync(h18Slides, { recursive: true });
+    mkdirSync(sharedResources, { recursive: true });
+    writeFileSync(join(h18Slides, '01.md'), '# H18');
+    writeFileSync(join(sharedResources, 'logo.png'), 'logo-bytes');
+
+    buildPresentation({
+      projectDir: root,
+      outFile: h18Out,
+      slidesDir: h18Slides,
+      resourcesDir: sharedResources,
+    });
+
+    expect(existsSync(h18Out)).toBe(true);
+    const copied = join(dirname(h18Out), 'resources', 'logo.png');
+    expect(readFileSync(copied, 'utf8')).toBe('logo-bytes');
+  });
 });

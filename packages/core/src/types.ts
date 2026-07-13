@@ -40,6 +40,12 @@ export interface Slide {
   channels: Record<string, string>;
   /** Slide-level layout hints and other directives. */
   metadata: SlideMetadata;
+  /**
+   * Per-channel metadata, taken from directives at the start of a channel
+   * section. These override {@link metadata} when that channel is rendered, so
+   * a channel can supply its own `title`, `subheadline`, `template`, etc.
+   */
+  channelMetadata: Record<string, SlideMetadata>;
 }
 
 /**

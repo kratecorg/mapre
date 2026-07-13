@@ -18,6 +18,9 @@ describe('parseBuildArgs', () => {
       projectDir: '.',
       outFile: 'dist/index.html',
       title: undefined,
+      slidesDir: undefined,
+      styleDir: undefined,
+      resourcesDir: undefined,
     });
   });
 
@@ -26,6 +29,31 @@ describe('parseBuildArgs', () => {
       projectDir: 'content',
       outFile: 'out/talk.html',
       title: 'Hello',
+      slidesDir: undefined,
+      styleDir: undefined,
+      resourcesDir: undefined,
+    });
+  });
+
+  it('reads per-folder overrides', () => {
+    expect(
+      parseBuildArgs([
+        '--slides',
+        'slides/H18',
+        '--style',
+        'style',
+        '--resources',
+        'resources',
+        '-o',
+        'dist/H18/index.html',
+      ]),
+    ).toEqual({
+      projectDir: '.',
+      outFile: 'dist/H18/index.html',
+      title: undefined,
+      slidesDir: 'slides/H18',
+      styleDir: 'style',
+      resourcesDir: 'resources',
     });
   });
 
@@ -44,6 +72,9 @@ describe('parseDevArgs', () => {
       projectDir: '.',
       outFile: 'dist/index.html',
       title: undefined,
+      slidesDir: undefined,
+      styleDir: undefined,
+      resourcesDir: undefined,
       port: 4321,
     });
   });
@@ -53,6 +84,9 @@ describe('parseDevArgs', () => {
       projectDir: 'content',
       outFile: 'dist/index.html',
       title: undefined,
+      slidesDir: undefined,
+      styleDir: undefined,
+      resourcesDir: undefined,
       port: 5000,
     });
   });

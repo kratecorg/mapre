@@ -69,7 +69,7 @@ describe('renderSlide', () => {
     const html = renderSlide(slide);
 
     expect(html).toContain('class="slide-bg"');
-    expect(html).toContain('background-image:url("bg.png")');
+    expect(html).toContain("background-image:url('bg.png')");
   });
 
   it('uses a solid colour background when the value is a colour', () => {
@@ -113,5 +113,36 @@ describe('renderSlide', () => {
     });
 
     expect(html).toContain('<header>');
+  });
+
+  it('fills template placeholders from the rendered channel metadata', () => {
+    const raw =
+      '[title: DE Titel]: #\n\n# Hallo\n\n[channel: en]: #\n[title: EN Title]: #\n\n# Hello';
+    const slide = parseSlide(raw, 0, { defaultChannel: 'de' });
+    const templates = { card: '<section><h2>{{title}}</h2>{{content}}</section>' };
+
+    const en = renderSlide(slide, { channel: 'en', templates, variables: { template: 'card' } });
+    const de = renderSlide(slide, { channel: 'de', templates, variables: { template: 'card' } });
+
+    expect(en).toContain('<h2>EN Title</h2>');
+    expect(en).toContain('<h1>Hello</h1>');
+    expect(de).toContain('<h2>DE Titel</h2>');
+    expect(de).toContain('<h1>Hallo</h1>');
+  });
+
+  it('lets a channel override the template selection', () => {
+    const raw = '# Hallo\n\n[channel: en]: #\n[template: hero]: #\n\n# Hello';
+    const slide = parseSlide(raw, 0, { defaultChannel: 'de' });
+    const templates = {
+      card: '<section>{{content}}</section>',
+      hero: '<header>{{content}}</header>',
+    };
+
+    expect(renderSlide(slide, { channel: 'en', templates, variables: { template: 'card' } })).toContain(
+      '<header>',
+    );
+    expect(renderSlide(slide, { channel: 'de', templates, variables: { template: 'card' } })).toContain(
+      '<section>',
+    );
   });
 });

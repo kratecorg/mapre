@@ -63,4 +63,16 @@ describe('parseSlide', () => {
 
     expect(slide.fragmentCount).toBe(2);
   });
+
+  it('extracts leading directives of a channel section as channel metadata', () => {
+    const raw =
+      '[title: DE]: #\n\n# Hallo\n\n[channel: en]: #\n[title: EN]: #\n[subheadline: Sub]: #\n\n# Hello';
+    const slide = parseSlide(raw, 0, { defaultChannel: 'de' });
+
+    expect(slide.metadata).toEqual({ title: 'DE' });
+    expect(slide.channelMetadata).toEqual({
+      en: { title: 'EN', subheadline: 'Sub' },
+    });
+    expect(slide.channels).toEqual({ de: '# Hallo', en: '# Hello' });
+  });
 });
