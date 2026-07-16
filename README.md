@@ -154,11 +154,22 @@ On the receiving machine, run the file directly with Node:
 ```bash
 node mapre.js init my-talk        # scaffold a presentation folder
 cd my-talk
-node ../mapre.js build            # write dist/index.html
+node ../mapre.js build            # write dist/presentation.html (+ one print HTML per channel)
+node ../mapre.js build --pdf      # also render each channel HTML to a PDF
 ```
 
-The resulting `dist/index.html` is itself self-contained and opens from
-`file://`, a local web server, or a hosted URL.
+The resulting `dist/presentation.html` is itself self-contained and opens from
+`file://`, a local web server, or a hosted URL. Alongside it, `build` writes one
+print-to-PDF HTML per channel (e.g. `presentation-en.html`), each laying out one
+slide per page at the deck's aspect ratio — open one and use the browser's
+Print → Save as PDF (use a Chromium-based browser such as Chrome or Edge;
+Firefox ignores the custom page size).
+
+With `--pdf`, `build` also renders those channel HTML files to PDF directly, so
+no browser step is needed. It prefers a containerised Chromium (`docker`, image
+overridable via `MAPRE_CHROME_IMAGE`) and falls back to a system Chrome/Edge
+(overridable via `MAPRE_CHROME`); if neither is present it simply keeps the HTML
+files. The channel HTML files are always kept.
 
 ## Status
 

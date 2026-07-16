@@ -291,7 +291,12 @@ Konsequenzen:
 
 Über die Kernanforderungen hinaus, priorisierbar:
 
-- **PDF-/Print-Export** der Publikumsansicht (ein Folie pro Seite).
+- **PDF-/Print-Export** der Publikumsansicht (eine Folie pro Seite): `mapre build`
+  erzeugt neben der interaktiven `presentation.html` pro Kanal eine
+  druckoptimierte HTML daneben (z. B. `presentation-en.html`); jede Seite ist
+  exakt auf das Deck-Seitenverhältnis (`aspect`) dimensioniert (`@page`, randlos),
+  eine Folie pro Seite. Der Nutzer öffnet die Datei im Browser und druckt sie via
+  „Als PDF speichern“. **Status: implementiert.**
 - **Autoplay / zeitgesteuerter Vorlauf** für Kiosk-Betrieb.
 - **Confidence-Monitor**-Feinschliff (große Uhr, klare Notes-Typografie).
 - **Mehrere Monitore**: Merken, welches Fenster auf welchen Screen gehört

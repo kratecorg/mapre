@@ -78,6 +78,16 @@ describe('renderSlide', () => {
     expect(renderSlide(slide)).toContain('background-color:#0a2540');
   });
 
+  it('prefers a channel-specific background over the slide background', () => {
+    const slide = parseSlide(
+      '[background: de.png]: #\n\n# Hallo\n\n[channel: en]: #\n[background: en.png]: #\n\n# Hello',
+      0,
+    );
+
+    expect(renderSlide(slide, { channel: 'en' })).toContain("background-image:url('en.png')");
+    expect(renderSlide(slide)).toContain("background-image:url('de.png')");
+  });
+
   it('applies a deck-level template when the slide sets none', () => {
     const slide = parseSlide('# Hi', 0);
 

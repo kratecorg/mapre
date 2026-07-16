@@ -34,16 +34,17 @@ export function renderSlide(slide: Slide, options: RenderOptions = {}): string {
   }
 
   html = wrapInTemplate(slide, html, options);
-  return withBackground(slide, html);
+  return withBackground(slide, html, options);
 }
 
 /**
  * Prepends a full-slide background layer when the slide sets a `background`
  * directive. A value that looks like a CSS color paints a solid colour;
  * anything else is treated as an image URL. The layer sits behind the content.
+ * A channel's own `background` takes precedence over the slide-level one.
  */
-function withBackground(slide: Slide, html: string): string {
-  const background = slide.metadata.background;
+function withBackground(slide: Slide, html: string, options: RenderOptions): string {
+  const background = mergeChannelMetadata(slide, options.channel).background;
   if (background === undefined || background.trim() === '') {
     return html;
   }
