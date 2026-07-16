@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, parse, resolve } from 'node:path';
 import { copyResources, loadDeckSource, loadDeckStyles, loadStyleAssets } from '@mapre/node';
-import { buildSingleFileHtml } from '@mapre/runtime';
+import { buildPrintHtml, buildSingleFileHtml, listDeckChannels } from '@mapre/runtime';
 
 /**
  * Options for {@link buildPresentation}.
@@ -32,10 +32,14 @@ export interface BuildPresentationOptions {
  * markdown, an optional `style/` folder holds CSS and HTML templates, and an
  * optional `resources/` folder holds static assets (images) that are copied
  * next to the output HTML so they can be referenced with document-relative
- * paths (e.g. `resources/photo.jpg`). Returns the absolute path of the written
- * file.
+ * paths (e.g. `resources/photo.jpg`).
+ *
+ * Alongside the interactive presentation, one print-to-PDF HTML per channel is
+ * written next to it (e.g. `presentation-en.html`); each lays out one slide per
+ * page at the deck's aspect ratio, ready to be printed to PDF from a browser.
+ * Returns the paths of all written HTML files.
  */
-export function buildPresentation(options: BuildPresentationOptions): string {
+export function buildPresentation(options: BuildPresentationOptions): BuildResult {
   const cwd = options.cwd ?? process.cwd();
   const { slidesDir, styleDir, resourcesDir } = resolveProjectDirs(cwd, options);
   const outFile = resolvePath(cwd, options.outFile);
@@ -52,9 +56,53 @@ export function buildPresentation(options: BuildPresentationOptions): string {
 
   mkdirSync(outDir, { recursive: true });
   writeFileSync(outFile, html, 'utf8');
+
+  const channelFiles = listDeckChannels(markdown).map((channel) => {
+    const printHtml = buildPrintHtml(markdown, {
+      channel,
+      title: options.title,
+      extraStyles,
+      templates,
+    });
+    const channelFile = channelPrintPath(outFile, channel);
+    writeFileSync(channelFile, printHtml, 'utf8');
+    return channelFile;
+  });
+
   copyResources(resourcesDir, join(outDir, 'resources'));
 
-  return outFile;
+  return { presentation: outFile, channelFiles };
+}
+
+/**
+ * The files written by {@link buildPresentation}: the interactive single-file
+ * presentation plus one print-to-PDF HTML per channel written alongside it.
+ */
+export interface BuildResult {
+  /** The interactive single-file presentation. */
+  presentation: string;
+  /** Per-channel print-to-PDF HTML files, one per channel. */
+  channelFiles: string[];
+}
+
+/**
+ * Builds the path of a channel's print HTML next to the main output file, by
+ * inserting the channel name into the base file name (e.g.
+ * `dist/presentation.html` + channel `en` -> `dist/presentation-en.html`).
+ */
+function channelPrintPath(outFile: string, channel: string): string {
+  const { dir, name, ext } = parse(outFile);
+  const extension = ext === '' ? '.html' : ext;
+  return join(dir, `${name}-${toFileName(channel)}${extension}`);
+}
+
+/**
+ * Turns a channel name into a safe file-name stem by replacing any character
+ * outside `[A-Za-z0-9._-]` with a hyphen, so channel names like `de/DE` or
+ * spaces never produce nested paths or invalid file names.
+ */
+function toFileName(channel: string): string {
+  return channel.replace(/[^A-Za-z0-9._-]+/g, '-');
 }
 
 /**

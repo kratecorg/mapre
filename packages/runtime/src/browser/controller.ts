@@ -1,5 +1,6 @@
 import type { Deck } from '@mapre/core';
 import { DEFAULT_CHANNEL, renderSlide } from '@mapre/core';
+import { collectChannels } from '../core/channels';
 import { Navigation } from '../core/navigation';
 import { createSync } from './sync';
 import type { SyncMessage } from './sync';
@@ -251,23 +252,6 @@ function windowFeatures(): string {
   const width = Math.round(window.screen.availWidth * 0.6);
   const height = Math.round(window.screen.availHeight * 0.6);
   return `popup,width=${width},height=${height}`;
-}
-
-/**
- * Collects the channel names for the UI: the deck's default channel first, then
- * every other channel used in the deck, sorted alphabetically. The default is
- * always present so it can be opened even when no slide carries default content.
- */
-function collectChannels(deck: Deck, defaultChannel: string): string[] {
-  const names = new Set<string>();
-  for (const slide of deck.slides) {
-    for (const name of Object.keys(slide.channels)) {
-      names.add(name);
-    }
-  }
-  names.delete(defaultChannel);
-  const rest = [...names].sort((first, second) => first.localeCompare(second));
-  return [defaultChannel, ...rest];
 }
 
 function keyToMove(

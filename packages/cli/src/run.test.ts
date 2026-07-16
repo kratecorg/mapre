@@ -16,11 +16,12 @@ describe('parseBuildArgs', () => {
   it('applies defaults when no arguments are given', () => {
     expect(parseBuildArgs([])).toEqual({
       projectDir: '.',
-      outFile: 'dist/index.html',
+      outFile: 'dist/presentation.html',
       title: undefined,
       slidesDir: undefined,
       styleDir: undefined,
       resourcesDir: undefined,
+      pdf: false,
     });
   });
 
@@ -32,6 +33,7 @@ describe('parseBuildArgs', () => {
       slidesDir: undefined,
       styleDir: undefined,
       resourcesDir: undefined,
+      pdf: false,
     });
   });
 
@@ -54,7 +56,12 @@ describe('parseBuildArgs', () => {
       slidesDir: 'slides/H18',
       styleDir: 'style',
       resourcesDir: 'resources',
+      pdf: false,
     });
+  });
+
+  it('sets the pdf flag when --pdf is given', () => {
+    expect(parseBuildArgs(['--pdf']).pdf).toBe(true);
   });
 
   it('rejects a missing option value', () => {
@@ -70,7 +77,7 @@ describe('parseDevArgs', () => {
   it('applies defaults including the dev port', () => {
     expect(parseDevArgs([])).toEqual({
       projectDir: '.',
-      outFile: 'dist/index.html',
+      outFile: 'dist/presentation.html',
       title: undefined,
       slidesDir: undefined,
       styleDir: undefined,
@@ -82,7 +89,7 @@ describe('parseDevArgs', () => {
   it('reads a positional project directory and a port', () => {
     expect(parseDevArgs(['content', '-p', '5000'])).toEqual({
       projectDir: 'content',
-      outFile: 'dist/index.html',
+      outFile: 'dist/presentation.html',
       title: undefined,
       slidesDir: undefined,
       styleDir: undefined,

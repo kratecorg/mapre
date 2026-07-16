@@ -8,3 +8,9 @@ export { assembleSingleFileHtml } from './build/assembleSingleFileHtml';
 
 export type { BuildSingleFileHtmlOptions } from './build/buildSingleFileHtml';
 export { buildSingleFileHtml } from './build/buildSingleFileHtml';
+
+export type { AssemblePrintHtmlParams } from './build/assemblePrintHtml';
+export { assemblePrintHtml } from './build/assemblePrintHtml';
+
+export type { BuildPrintHtmlOptions } from './build/buildPrintHtml';
+export { buildPrintHtml, listDeckChannels } from './build/buildPrintHtml';

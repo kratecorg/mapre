@@ -62,3 +62,56 @@ describe('buildPresentation', () => {
     expect(readFileSync(copied, 'utf8')).toBe('logo-bytes');
   });
 });
+
+describe('buildPresentation channel exports', () => {
+  let root: string;
+  let slidesDir: string;
+  let outFile: string;
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'mapre-print-'));
+    slidesDir = join(root, 'slides');
+    outFile = join(root, 'dist', 'presentation.html');
+    mkdirSync(slidesDir, { recursive: true });
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('writes a single channel file next to the presentation for a single-channel deck', () => {
+    writeFileSync(join(slidesDir, '01.md'), '# Title');
+
+    const result = buildPresentation({ projectDir: root, outFile });
+
+    expect(result.presentation).toBe(outFile);
+    expect(result.channelFiles).toEqual([join(dirname(outFile), 'presentation-main.html')]);
+    expect(readFileSync(result.channelFiles[0], 'utf8')).toContain('@page');
+  });
+
+  it('writes one channel file per channel for a multi-channel deck', () => {
+    const markdown = [
+      '---',
+      'defaultChannel: de',
+      '---',
+      '',
+      '[channel: de]: #',
+      '# Hallo',
+      '',
+      '[channel: en]: #',
+      '# Hello',
+    ].join('\n');
+    writeFileSync(join(slidesDir, '01.md'), markdown);
+
+    const result = buildPresentation({ projectDir: root, outFile });
+
+    const outDir = dirname(outFile);
+    expect(result.channelFiles).toEqual([
+      join(outDir, 'presentation-de.html'),
+      join(outDir, 'presentation-en.html'),
+    ]);
+    expect(readFileSync(join(outDir, 'presentation-de.html'), 'utf8')).toContain('Hallo');
+    expect(readFileSync(join(outDir, 'presentation-en.html'), 'utf8')).toContain('Hello');
+  });
+});
+

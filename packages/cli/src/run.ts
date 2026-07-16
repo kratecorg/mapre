@@ -1,5 +1,6 @@
 import { buildPresentation } from './build';
 import { startDevServer } from './dev';
+import { generateChannelPdfs } from './pdf';
 import { initPresentation } from './init';
 
 /**
@@ -21,6 +22,7 @@ export interface BuildArgs {
   slidesDir?: string;
   styleDir?: string;
   resourcesDir?: string;
+  pdf: boolean;
 }
 
 /**
@@ -45,7 +47,7 @@ export interface InitArgs {
 }
 
 const DEFAULT_PROJECT_DIR = '.';
-const DEFAULT_OUT_FILE = 'dist/index.html';
+const DEFAULT_OUT_FILE = 'dist/presentation.html';
 const DEFAULT_DEV_PORT = 4321;
 
 const DEFAULT_IO: CliIo = {
@@ -69,14 +71,18 @@ const HELP_TEXT = [
   'build several decks that share one style/ and resources/ folder.',
   '',
   'build options:',
-  '  -o, --out <file>       Output HTML file (default: dist/index.html)',
+  '  -o, --out <file>       Output HTML file (default: dist/presentation.html)',
   '  -t, --title <title>    Override the document title',
   '  --slides <dir>         Slides folder (default: <projectDir>/slides)',
   '  --style <dir>          Style folder (default: <projectDir>/style)',
   '  --resources <dir>      Resources folder (default: <projectDir>/resources)',
+  '  --pdf                  Also render each channel HTML to a PDF (uses Docker if',
+  '                         available, else a system Chrome/Edge; HTML is kept)',
+  '  A print-to-PDF HTML per channel is written next to the output (e.g.',
+  '  presentation-en.html); open one in a browser and use Print -> Save as PDF.',
   '',
   'dev options:',
-  '  -o, --out <file>       Output HTML file (default: dist/index.html)',
+  '  -o, --out <file>       Output HTML file (default: dist/presentation.html)',
   '  -t, --title <title>    Override the document title',
   '  --slides <dir>         Slides folder (default: <projectDir>/slides)',
   '  --style <dir>          Style folder (default: <projectDir>/style)',
@@ -85,8 +91,8 @@ const HELP_TEXT = [
   '',
   'Examples:',
   '  mapre init my-talk',
-  '  mapre build -o dist/index.html',
-  '  mapre build --slides slides/H18 -o dist/H18/index.html',
+  '  mapre build -o dist/presentation.html',
+  '  mapre build --slides slides/H18 -o dist/H18/presentation.html',
   '  mapre dev -p 4321',
 ].join('\n');
 
@@ -100,8 +106,14 @@ export function run(argv: string[], io: CliIo = DEFAULT_IO): number {
   switch (command) {
     case 'build': {
       const args = parseBuildArgs(rest);
-      const outFile = buildPresentation(args);
-      io.log(`Built presentation -> ${outFile}`);
+      const result = buildPresentation(args);
+      io.log(`Built presentation -> ${result.presentation}`);
+      for (const channelFile of result.channelFiles) {
+        io.log(`Built print HTML -> ${channelFile}`);
+      }
+      if (args.pdf) {
+        generateChannelPdfs({ htmlFiles: result.channelFiles, reporter: io });
+      }
       return 0;
     }
     case 'dev': {
@@ -147,6 +159,7 @@ export function parseBuildArgs(args: string[]): BuildArgs {
   let slidesDir: string | undefined;
   let styleDir: string | undefined;
   let resourcesDir: string | undefined;
+  let pdf = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -165,6 +178,8 @@ export function parseBuildArgs(args: string[]): BuildArgs {
     } else if (arg === '--resources') {
       resourcesDir = requireValue(arg, args[index + 1]);
       index += 1;
+    } else if (arg === '--pdf') {
+      pdf = true;
     } else if (arg.startsWith('-')) {
       throw new Error(`Unknown option: ${arg}`);
     } else {
@@ -179,6 +194,7 @@ export function parseBuildArgs(args: string[]): BuildArgs {
     slidesDir,
     styleDir,
     resourcesDir,
+    pdf,
   };
 }
 
