@@ -1,6 +1,7 @@
 import type { Controller } from './controller';
 import { query, toggleFullscreen } from './dom';
 import { mountOverview } from './overview';
+import { mountSpotlight } from './spotlight';
 import { createZoomControl, DEFAULT_SCALE } from './zoomControl';
 
 /**
@@ -17,7 +18,7 @@ export interface PresentationViewOptions {
 }
 
 const STAGE =
-  '<div class="stage"><div class="slide-box"><div class="slide" id="stage-slide"></div></div></div>';
+  '<div class="stage"><div class="slide-box"><div class="slide" id="stage-slide"></div></div><div class="spotlight" id="spotlight" aria-hidden="true"></div></div>';
 
 const CONTROL_BAR = `
   <footer class="bar">
@@ -26,6 +27,7 @@ const CONTROL_BAR = `
     <button id="next" type="button" aria-label="Next">&#9654;</button>
     <span id="channel-label" class="channel-label"></span>
     <button id="overview" type="button">Overview</button>
+    <button id="highlight" type="button" aria-pressed="false">Highlight</button>
     <button id="open-presenter" type="button">Presenter</button>
     <button id="fullscreen" type="button" aria-label="Fullscreen">&#9974;</button>
     <span id="zoom" class="zoom"></span>
@@ -48,6 +50,11 @@ export function mountPresentationView(
 
   const slideBox = query(root, '#stage-slide');
   const box = query(root, '.slide-box');
+  const stage = query(root, '.stage');
+  const spotlight = query(root, '#spotlight');
+  const highlightButton = options.connected
+    ? undefined
+    : query<HTMLButtonElement>(root, '#highlight');
 
   function render(): void {
     const { navigation } = controller;
@@ -55,6 +62,18 @@ export function mountPresentationView(
     box.classList.toggle('show-box', controller.isBoxVisible());
     updateBar();
   }
+
+  const spotlightMount = mountSpotlight({
+    controller,
+    overlay: spotlight,
+    container: stage,
+    slideBox: box,
+    track: true,
+    onActiveChange: (active) => {
+      highlightButton?.setAttribute('aria-pressed', String(active));
+      highlightButton?.classList.toggle('is-active', active);
+    },
+  });
 
   function updateBar(): void {
     if (options.connected) {
@@ -69,6 +88,9 @@ export function mountPresentationView(
   let closeOverview: (() => void) | undefined;
   if (!options.connected) {
     wireControlBar(root, controller, channel, options.onOpenPresenter, toggleOverview);
+    highlightButton?.addEventListener('click', () => {
+      controller.setSpotlightActive(!controller.getSpotlight().active);
+    });
   }
 
   function toggleOverview(): void {
@@ -89,6 +111,7 @@ export function mountPresentationView(
   return () => {
     closeOverview?.();
     unsubscribe();
+    spotlightMount.dispose();
   };
 }
 

@@ -12,6 +12,17 @@ import type { SyncMessage } from './sync';
 export type Role = 'presentation' | 'presenter';
 
 /**
+ * The spotlight highlight: when active, the audience view dims and a bright
+ * circle centred on ({@link Spotlight.x}, {@link Spotlight.y}) stays lit. The
+ * coordinates are normalised (0–1) to the slide box.
+ */
+export interface Spotlight {
+  readonly active: boolean;
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
  * A window opened from the presenter, tracked so it can be listed and resized.
  */
 export interface ManagedWindow {
@@ -47,6 +58,18 @@ export interface Controller {
   isBoxVisible(): boolean;
   /** Shows or hides the slide box outline across all synced windows. */
   setBoxVisible(active: boolean): void;
+  /** The current spotlight highlight state, shared across all synced windows. */
+  getSpotlight(): Spotlight;
+  /** Turns the spotlight highlight on or off across all synced windows. */
+  setSpotlightActive(active: boolean): void;
+  /**
+   * Moves the spotlight's bright circle. Coordinates are normalised (0–1) to
+   * the slide box so the highlight lands on the same slide point in every
+   * window regardless of its size.
+   */
+  moveSpotlight(x: number, y: number): void;
+  /** Subscribes to spotlight changes; returns an unsubscribe function. */
+  onSpotlightChange(listener: () => void): () => void;
   /** The currently open child windows, with closed ones pruned. */
   listWindows(): ManagedWindow[];
   /** Subscribes to changes in the set of open windows; returns unsubscribe. */
@@ -82,7 +105,9 @@ export function createController(
   const windowListeners: Array<() => void> = [];
   const reloadListeners: Array<() => void> = [];
   const channelCounts = new Map<string, number>();
+  const spotlightListeners: Array<() => void> = [];
   let boxVisible = false;
+  let spotlight: Spotlight = { active: false, x: 0.5, y: 0.5 };
 
   const sync = createSync(handleMessage);
 
@@ -92,6 +117,9 @@ export function createController(
       slideIndex: navigation.slideIndex,
       stepIndex: navigation.stepIndex,
       showBox: boxVisible,
+      spotActive: spotlight.active,
+      spotX: spotlight.x,
+      spotY: spotlight.y,
     };
   }
 
@@ -102,6 +130,27 @@ export function createController(
     if (broadcast) {
       sync.broadcast(snapshot());
     }
+  }
+
+  function emitSpotlight(): void {
+    for (const listener of spotlightListeners) {
+      listener();
+    }
+  }
+
+  /**
+   * Adopts the spotlight state carried by a sync message and reports whether it
+   * actually changed, so callers only notify listeners on a real update.
+   */
+  function applySpotlight(message: SyncMessage): boolean {
+    const active = message.spotActive ?? spotlight.active;
+    const x = message.spotX ?? spotlight.x;
+    const y = message.spotY ?? spotlight.y;
+    if (active === spotlight.active && x === spotlight.x && y === spotlight.y) {
+      return false;
+    }
+    spotlight = { active, x, y };
+    return true;
   }
 
   function go(move: () => boolean): void {
@@ -147,18 +196,35 @@ export function createController(
       return;
     }
 
+    if (message.kind === 'spotlight') {
+      applySpotlight(message);
+      emitSpotlight();
+      return;
+    }
+
     const boxChanged = message.showBox !== undefined && message.showBox !== boxVisible;
     if (message.showBox !== undefined) {
       boxVisible = message.showBox;
     }
 
+    const spotlightChanged = applySpotlight(message);
+
     const moved = navigation.goTo(message.slideIndex ?? 0, message.stepIndex ?? 0);
     if (moved || boxChanged) {
       emit(false);
     }
+    if (spotlightChanged) {
+      emitSpotlight();
+    }
   }
 
   document.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.key === 'h' || event.key === 'H') {
+      event.preventDefault();
+      controller.setSpotlightActive(!controller.getSpotlight().active);
+      return;
+    }
+
     const move = keyToMove(event.key, navigation, slideCount);
     if (!move) {
       return;
@@ -256,6 +322,39 @@ export function createController(
       boxVisible = active;
       emit(true);
     },
+    getSpotlight: () => spotlight,
+    setSpotlightActive: (active: boolean) => {
+      if (active === spotlight.active) {
+        return;
+      }
+      spotlight = { ...spotlight, active };
+      sync.broadcast({ kind: 'spotlight', spotActive: active, spotX: spotlight.x, spotY: spotlight.y });
+      emitSpotlight();
+    },
+    moveSpotlight: (x: number, y: number) => {
+      const clampedX = clamp01(x);
+      const clampedY = clamp01(y);
+      if (clampedX === spotlight.x && clampedY === spotlight.y) {
+        return;
+      }
+      spotlight = { ...spotlight, x: clampedX, y: clampedY };
+      sync.broadcast({
+        kind: 'spotlight',
+        spotActive: spotlight.active,
+        spotX: clampedX,
+        spotY: clampedY,
+      });
+      emitSpotlight();
+    },
+    onSpotlightChange: (listener: () => void) => {
+      spotlightListeners.push(listener);
+      return () => {
+        const position = spotlightListeners.indexOf(listener);
+        if (position >= 0) {
+          spotlightListeners.splice(position, 1);
+        }
+      };
+    },
   };
 
   /**
@@ -313,6 +412,17 @@ function applyZoom(value: number | undefined): void {
   }
 
   document.documentElement.style.setProperty('--scale', String(value));
+}
+
+/** Clamps a value into the normalised 0–1 range used for spotlight coordinates. */
+function clamp01(value: number): number {
+  if (value < 0) {
+    return 0;
+  }
+  if (value > 1) {
+    return 1;
+  }
+  return value;
 }
 
 /**

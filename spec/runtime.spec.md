@@ -67,8 +67,16 @@ Wünschenswert (eigene Ergänzungen):
   und synchronisiert Presenter samt aller angeschlossenen Presentation Windows.
   Schließen per Button oder `Escape`. **Status: implementiert (Button-Toggle;
   eigener `O`-Shortcut zum Öffnen noch offen).**
-- **Laserpointer / Zeiger**: Positionszeiger, der auf die Publikumsansicht
-  gespiegelt wird.
+- **Laserpointer / Zeiger (Spotlight-Highlight)**: dunkelt die Publikumsansicht
+  ab und lässt einen hellen Kreis stehen, der dem Mauszeiger folgt. Die
+  **Steuerung erfolgt bevorzugt im Presenter Window**: Der Referent bewegt die
+  Maus über die Vorschau der aktuellen Folie; die Position wird auf alle
+  Presentation Windows gespiegelt (kanalübergreifend synchron). Ein Toggle
+  (Button `Highlight` in Publikums- und Presenter-Ansicht, Shortcut `H`)
+  schaltet den Effekt an/aus. Die Position ist auf die Slide-Box normiert
+  (0–1), sodass der Kreis in jedem Fenster unabhängig von dessen Größe auf
+  denselben Folienpunkt trifft. **Status: implementiert** (synchron über
+  `postMessage`, funktioniert auch unter `file://`).
 - **Annotationen**: einfaches Freihand-Zeichnen auf der Folie (spiegelbar).
   *(Offen: Scope – ggf. spätere Ausbaustufe.)*
 
@@ -76,8 +84,9 @@ Wünschenswert (eigene Ergänzungen):
 
 - **Tastatur-Shortcuts** für alle Navigations- und Timer-Aktionen
   (z. B. `→`/`Space` weiter, `←` zurück, `F` Vollbild, `B` Blackout,
-  `O` Overview, `0…9`+`Enter` Sprung). Presenter-Fernbedienungen (Clicker)
-  senden i. d. R. `PageUp`/`PageDown` — diese müssen abgedeckt sein.
+  `H` Highlight/Spotlight, `O` Overview, `0…9`+`Enter` Sprung).
+  Presenter-Fernbedienungen (Clicker) senden i. d. R. `PageUp`/`PageDown` —
+  diese müssen abgedeckt sein.
 - **Touch/Swipe** für Tablet-Nutzung in den Fenstern.
 - **On-Screen-Buttons** im Presenter Window als Fallback ohne Tastatur.
 
@@ -205,7 +214,11 @@ synchronisierender Zustand:
 - aktueller Fragment-/Reveal-Schritt
 - Presentation-Zoomstufe
 - Blackout/Whiteout-Status
-- optional: Zeiger-/Annotationsdaten
+- **Spotlight-Highlight**: Ein/Aus sowie die auf die Slide-Box normierte
+  Zeigerposition. Steuerung bevorzugt aus dem Presenter Window (Maus über der
+  Vorschau der aktuellen Folie); alle Presentation Windows folgen. **Status:
+  implementiert.**
+- optional: Annotationsdaten
 
 ### 6.1 Transportmechanismus (deploy-übergreifend)
 

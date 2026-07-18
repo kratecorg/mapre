@@ -21,9 +21,12 @@ const MESSAGE_TAG = '__mapre_sync';
  *   to reconnect after the presenter is reloaded.
  * - `reload` tells the receiving window to reload itself, used to refresh a
  *   reconnected window so it picks up changed slides.
+ * - `spotlight` carries the highlight state: whether it is on and, if so, where
+ *   its bright circle sits (normalised to the slide box so it mirrors across
+ *   differently sized windows).
  */
 export interface SyncMessage {
-  kind: 'state' | 'request-state' | 'zoom' | 'announce' | 'reload';
+  kind: 'state' | 'request-state' | 'zoom' | 'announce' | 'reload' | 'spotlight';
   slideIndex?: number;
   stepIndex?: number;
   value?: number;
@@ -31,6 +34,12 @@ export interface SyncMessage {
   showBox?: boolean;
   /** The channel of an announcing presentation window. */
   channel?: string;
+  /** Whether the spotlight highlight is active. */
+  spotActive?: boolean;
+  /** Spotlight centre X, normalised (0–1) to the slide box. */
+  spotX?: number;
+  /** Spotlight centre Y, normalised (0–1) to the slide box. */
+  spotY?: number;
 }
 
 /**
@@ -70,6 +79,9 @@ export function createSync(handler: (message: SyncMessage, source?: Window) => v
         value: data.value,
         showBox: data.showBox,
         channel: data.channel,
+        spotActive: data.spotActive,
+        spotX: data.spotX,
+        spotY: data.spotY,
       },
       (event.source as Window | null) ?? undefined,
     );

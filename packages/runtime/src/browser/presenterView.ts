@@ -4,6 +4,7 @@ import { formatDuration } from '../core/format';
 import type { Controller, ManagedWindow } from './controller';
 import { query } from './dom';
 import { mountOverview } from './overview';
+import { mountSpotlight } from './spotlight';
 import { createZoomControl, DEFAULT_SCALE } from './zoomControl';
 
 const TIMER_TICK_MS = 250;
@@ -18,6 +19,7 @@ const TEMPLATE = `
         <div class="slide-box" id="pv-current-box">
           <div class="slide" id="pv-current"></div>
         </div>
+        <div class="spotlight" id="pv-spotlight" aria-hidden="true"></div>
       </div>
     </section>
     <aside class="pv-side">
@@ -48,6 +50,7 @@ const TEMPLATE = `
       <div class="pv-view">
         <button id="pv-overview" type="button">Overview</button>
         <button id="pv-box-toggle" type="button" aria-pressed="false">Box</button>
+        <button id="pv-highlight" type="button" aria-pressed="false">Highlight</button>
       </div>
       <div class="pv-channel-view" id="pv-channel-view"></div>
       <div class="pv-channels" id="pv-channels"></div>
@@ -96,7 +99,10 @@ export function mountPresenterView(
   const timeLabel = query(root, '#pv-time');
   const toggleButton = query(root, '#pv-toggle');
   const boxToggleButton = query(root, '#pv-box-toggle');
+  const highlightButton = query(root, '#pv-highlight');
   const currentSlideBox = query(root, '#pv-current-box');
+  const currentStage = query(root, '.pv-current .pv-stage');
+  const currentSpotlight = query(root, '#pv-spotlight');
   const overflowBadge = query(root, '#pv-overflow');
 
   const overviewButton = query(root, '#pv-overview');
@@ -173,6 +179,10 @@ export function mountPresenterView(
     renderBoxState();
   });
 
+  highlightButton.addEventListener('click', () => {
+    controller.setSpotlightActive(!controller.getSpotlight().active);
+  });
+
   let closeOverview: (() => void) | undefined;
   overviewButton.addEventListener('click', () => {
     if (closeOverview) {
@@ -196,6 +206,21 @@ export function mountPresenterView(
     boxToggleButton.setAttribute('aria-pressed', String(active));
   }
 
+  // The presenter's own current-slide preview is the primary pointer surface:
+  // moving the mouse over it steers the spotlight, which the controller
+  // broadcasts so every presentation window follows.
+  const spotlightMount = mountSpotlight({
+    controller,
+    overlay: currentSpotlight,
+    container: currentStage,
+    slideBox: currentSlideBox,
+    track: true,
+    onActiveChange: (active) => {
+      highlightButton.classList.toggle('is-active', active);
+      highlightButton.setAttribute('aria-pressed', String(active));
+    },
+  });
+
   mountChannelButtons(query(root, '#pv-channels'), controller);
 
   const channelSwitch = mountChannelSwitch(query(root, '#pv-channel-view'), controller, (selected) => {
@@ -218,6 +243,7 @@ export function mountPresenterView(
   const unsubscribe = controller.onChange(() => {
     renderPreview();
     renderBoxState();
+    spotlightMount.render();
   });
   renderPreview();
   renderBoxState();
@@ -227,6 +253,7 @@ export function mountPresenterView(
 
   return () => {
     unsubscribe();
+    spotlightMount.dispose();
     windows.dispose();
     closeOverview?.();
     window.clearInterval(intervalId);

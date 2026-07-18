@@ -83,7 +83,29 @@ export const STYLES = `
     padding: 2rem;
     min-height: 0;
     container-type: size;
+    position: relative;
   }
+
+  /*
+   * Spotlight highlight: a dimming overlay above the slide with a bright
+   * circular hole punched out by a radial gradient. It ignores pointer events
+   * so the stage below still receives the mouse-move that steers the circle.
+   */
+  .spotlight {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    background: radial-gradient(
+      circle var(--spot-r, 12rem) at var(--spot-x, 50%) var(--spot-y, 50%),
+      transparent 0,
+      transparent calc(var(--spot-r, 12rem) * 0.82),
+      rgba(2, 6, 23, 0.72) var(--spot-r, 12rem)
+    );
+  }
+  .spotlight.is-active { opacity: 1; }
   .bar {
     display: flex;
     gap: 1rem;
@@ -111,6 +133,7 @@ export const STYLES = `
     letter-spacing: 0.05em;
   }
   .channel-label:empty { display: none; }
+  #highlight.is-active { background: #38bdf8; color: #0f172a; }
 
   /* Presenter view */
   .presenter {
@@ -138,6 +161,7 @@ export const STYLES = `
     padding: 0.75rem;
     overflow: hidden;
     container-type: size;
+    position: relative;
   }
   .pv-notes > div {
     flex: 1;
@@ -189,6 +213,7 @@ export const STYLES = `
   }
   .pv-timer, .pv-nav, .pv-view { display: flex; align-items: center; gap: 0.75rem; }
   #pv-box-toggle.is-active { background: #38bdf8; color: #0f172a; }
+  #pv-highlight.is-active { background: #38bdf8; color: #0f172a; }
   .pv-channels { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .pv-channel-view { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .pv-channel-view button.is-active { background: #38bdf8; color: #0f172a; }
