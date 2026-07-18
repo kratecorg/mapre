@@ -59,6 +59,13 @@ export interface Controller {
    * has been reloaded. A no-op when there is no opener.
    */
   announce(channel: string): void;
+  /**
+   * Subscribes to reload requests from the presenter (sent when this window
+   * reconnects). The listener is invoked after the requested position has been
+   * applied to the navigation, so it can persist that position before reloading.
+   * Returns an unsubscribe function.
+   */
+  onReload(listener: () => void): () => void;
 }
 
 export function createController(
@@ -73,6 +80,7 @@ export function createController(
   const listeners: Array<() => void> = [];
   const openedWindows: ManagedWindow[] = [];
   const windowListeners: Array<() => void> = [];
+  const reloadListeners: Array<() => void> = [];
   const channelCounts = new Map<string, number>();
   let boxVisible = false;
 
@@ -110,7 +118,26 @@ export function createController(
 
     if (message.kind === 'announce') {
       if (source) {
-        registerWindow(source, message.channel ?? 'presentation');
+        const adopted = registerWindow(source, message.channel ?? 'presentation');
+        // A window that is adopted via an announce (rather than being freshly
+        // opened) is reconnecting to a reloaded presenter; reload it so it picks
+        // up any changed slides. The current position travels with the request
+        // so the window restores exactly where it was instead of resetting.
+        if (adopted) {
+          sync.postTo(source, {
+            kind: 'reload',
+            slideIndex: navigation.slideIndex,
+            stepIndex: navigation.stepIndex,
+          });
+        }
+      }
+      return;
+    }
+
+    if (message.kind === 'reload') {
+      navigation.goTo(message.slideIndex ?? navigation.slideIndex, message.stepIndex ?? navigation.stepIndex);
+      for (const listener of reloadListeners) {
+        listener();
       }
       return;
     }
@@ -212,6 +239,15 @@ export function createController(
         sync.postTo(window.opener as Window, { kind: 'announce', channel });
       }
     },
+    onReload: (listener: () => void) => {
+      reloadListeners.push(listener);
+      return () => {
+        const position = reloadListeners.indexOf(listener);
+        if (position >= 0) {
+          reloadListeners.splice(position, 1);
+        }
+      };
+    },
     isBoxVisible: () => boxVisible,
     setBoxVisible: (active: boolean) => {
       if (active === boxVisible) {
@@ -226,13 +262,14 @@ export function createController(
    * Registers a window as controlled: it starts receiving sync updates and, if
    * not already tracked, is added to the window list and sent the current state
    * so it catches up. Called both when opening a window and when a window
-   * (re)announces itself after the presenter has been reloaded.
+   * (re)announces itself after the presenter has been reloaded. Returns whether
+   * the window was newly adopted (i.e. not already tracked).
    */
-  function registerWindow(target: Window, name: string): void {
+  function registerWindow(target: Window, name: string): boolean {
     sync.register(target);
 
     if (openedWindows.some((entry) => entry.window === target)) {
-      return;
+      return false;
     }
 
     const count = (channelCounts.get(name) ?? 0) + 1;
@@ -240,6 +277,7 @@ export function createController(
     openedWindows.push({ window: target, channel: name, label: `${name} #${count}` });
     notifyWindows();
     sync.postTo(target, snapshot());
+    return true;
   }
 
   function notifyWindows(): void {

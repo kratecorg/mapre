@@ -19,9 +19,11 @@ const MESSAGE_TAG = '__mapre_sync';
  * - `announce` lets a controlled presentation window make itself known to its
  *   opener, so the presenter can (re)register it — this is what allows windows
  *   to reconnect after the presenter is reloaded.
+ * - `reload` tells the receiving window to reload itself, used to refresh a
+ *   reconnected window so it picks up changed slides.
  */
 export interface SyncMessage {
-  kind: 'state' | 'request-state' | 'zoom' | 'announce';
+  kind: 'state' | 'request-state' | 'zoom' | 'announce' | 'reload';
   slideIndex?: number;
   stepIndex?: number;
   value?: number;

@@ -231,6 +231,11 @@ geladenen) Presenter. Damit der Presenter seine Fenster nicht „vergisst“:
   (Heartbeat/`announce`, inkl. seines Kanals).
 - Der Presenter registriert ein sich meldendes Fenster erneut, nimmt es wieder in
   seine Fensterliste auf und synchronisiert es sofort auf den aktuellen Zustand.
+- Ein so **neu adoptiertes** Fenster wird zudem einmalig zum Neuladen
+  aufgefordert, damit es geänderte Folien übernimmt; die aktuelle Position reist
+  in der Aufforderung mit, sodass das Fenster nach dem Reload an derselben Folie
+  fortsetzt statt auf Folie 1 zu springen (der wiederholte Heartbeat eines
+  bereits bekannten Fensters löst kein erneutes Neuladen aus).
 - So werden nach einem Reload noch offene Presentation Windows automatisch wieder
   adoptiert und folgen erneut der Navigation.
 

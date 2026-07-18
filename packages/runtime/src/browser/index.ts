@@ -88,6 +88,16 @@ function start(): void {
   }
 
   controller.onChange(writeHash);
+
+  // When the presenter re-adopts this window after a reload, it asks us to
+  // reload so changed slides are picked up. The requested position has already
+  // been applied, so persist it to the hash first — that way the reload restores
+  // the current slide instead of resetting to the first one.
+  controller.onReload(() => {
+    writeHash();
+    location.reload();
+  });
+
   show(parsed.role);
 
   // A controlled presentation window keeps announcing itself so the presenter
