@@ -1,5 +1,6 @@
 import type { Controller } from './controller';
 import { query, toggleFullscreen } from './dom';
+import { mountOverview } from './overview';
 import { createZoomControl, DEFAULT_SCALE } from './zoomControl';
 
 /**
@@ -24,6 +25,7 @@ const CONTROL_BAR = `
     <span id="counter"></span>
     <button id="next" type="button" aria-label="Next">&#9654;</button>
     <span id="channel-label" class="channel-label"></span>
+    <button id="overview" type="button">Overview</button>
     <button id="open-presenter" type="button">Presenter</button>
     <button id="fullscreen" type="button" aria-label="Fullscreen">&#9974;</button>
     <span id="zoom" class="zoom"></span>
@@ -64,13 +66,30 @@ export function mountPresentationView(
     query<HTMLButtonElement>(root, '#next').disabled = navigation.isLast;
   }
 
+  let closeOverview: (() => void) | undefined;
   if (!options.connected) {
-    wireControlBar(root, controller, channel, options.onOpenPresenter);
+    wireControlBar(root, controller, channel, options.onOpenPresenter, toggleOverview);
+  }
+
+  function toggleOverview(): void {
+    if (closeOverview) {
+      closeOverview();
+      return;
+    }
+    closeOverview = mountOverview(controller, {
+      channel,
+      onClose: () => {
+        closeOverview = undefined;
+      },
+    });
   }
 
   const unsubscribe = controller.onChange(render);
   render();
-  return unsubscribe;
+  return () => {
+    closeOverview?.();
+    unsubscribe();
+  };
 }
 
 function wireControlBar(
@@ -78,6 +97,7 @@ function wireControlBar(
   controller: Controller,
   channel: string,
   onOpenPresenter: () => void,
+  onToggleOverview: () => void,
 ): void {
   if (controller.channels.length > 1) {
     query(root, '#channel-label').textContent = channel;
@@ -85,6 +105,7 @@ function wireControlBar(
 
   query(root, '#next').addEventListener('click', () => controller.next());
   query(root, '#prev').addEventListener('click', () => controller.previous());
+  query(root, '#overview').addEventListener('click', onToggleOverview);
   query(root, '#open-presenter').addEventListener('click', onOpenPresenter);
   query(root, '#fullscreen').addEventListener('click', toggleFullscreen);
   query(root, '#zoom').appendChild(

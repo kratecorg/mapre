@@ -62,7 +62,11 @@ Wünschenswert (eigene Ergänzungen):
 - **Blackout / Whiteout**: Publikumsansicht temporär schwarz/weiß schalten
   (Aufmerksamkeit lenken), Presenter behält Kontrolle.
 - **Folienübersicht (Overview/Grid)**: Rasteransicht aller Folien zum schnellen
-  Springen.
+  Springen. Ein Button (in Publikums- und Presenter-Ansicht) öffnet ein
+  vollflächiges Raster aller Folien als Thumbnails; ein Klick springt zur Folie
+  und synchronisiert Presenter samt aller angeschlossenen Presentation Windows.
+  Schließen per Button oder `Escape`. **Status: implementiert (Button-Toggle;
+  eigener `O`-Shortcut zum Öffnen noch offen).**
 - **Laserpointer / Zeiger**: Positionszeiger, der auf die Publikumsansicht
   gespiegelt wird.
 - **Annotationen**: einfaches Freihand-Zeichnen auf der Folie (spiegelbar).

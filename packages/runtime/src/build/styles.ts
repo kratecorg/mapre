@@ -193,4 +193,72 @@ export const STYLES = `
   .pv-channel-view { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .pv-channel-view button.is-active { background: #38bdf8; color: #0f172a; }
   #pv-time { font-variant-numeric: tabular-nums; font-size: 1.75rem; }
+  #pv-overview.is-active { background: #38bdf8; color: #0f172a; }
+
+  /*
+   * Overview overlay: a scrollable grid of every slide as a thumbnail. Each
+   * thumbnail is a query container so the slide box letterboxes into it and the
+   * cqh/cqw-based typography scales down, exactly like the stage does.
+   */
+  .overview {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+  .overview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .overview-title {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+  }
+  .overview-grid {
+    --scale: 1;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1rem;
+    align-content: start;
+  }
+  .overview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.35rem;
+    background: transparent;
+    border: 2px solid #334155;
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+  .overview-item:hover { border-color: #64748b; }
+  .overview-item:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+  .overview-item.is-current { border-color: #38bdf8; }
+  .overview-thumb {
+    container-type: size;
+    aspect-ratio: var(--aspect-w) / var(--aspect-h);
+    width: 100%;
+    background: #1e293b;
+    border-radius: 0.4rem;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .overview-number {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
 `;

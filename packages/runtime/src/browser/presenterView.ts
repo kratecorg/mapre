@@ -2,6 +2,7 @@ import { Timer } from '../core/timer';
 import { formatDuration } from '../core/format';
 import type { Controller, ManagedWindow } from './controller';
 import { query } from './dom';
+import { mountOverview } from './overview';
 import { createZoomControl, DEFAULT_SCALE } from './zoomControl';
 
 const TIMER_TICK_MS = 250;
@@ -43,6 +44,7 @@ const TEMPLATE = `
         <button id="pv-reset" type="button">Reset</button>
       </div>
       <div class="pv-view">
+        <button id="pv-overview" type="button">Overview</button>
         <button id="pv-box-toggle" type="button" aria-pressed="false">Box</button>
       </div>
       <div class="pv-channel-view" id="pv-channel-view"></div>
@@ -94,6 +96,8 @@ export function mountPresenterView(
   const boxToggleButton = query(root, '#pv-box-toggle');
   const currentSlideBox = query(root, '#pv-current-box');
   const overflowBadge = query(root, '#pv-overflow');
+
+  const overviewButton = query(root, '#pv-overview');
 
   const timer = new Timer();
 
@@ -160,6 +164,22 @@ export function mountPresenterView(
     renderBoxState();
   });
 
+  let closeOverview: (() => void) | undefined;
+  overviewButton.addEventListener('click', () => {
+    if (closeOverview) {
+      closeOverview();
+      return;
+    }
+    overviewButton.classList.add('is-active');
+    closeOverview = mountOverview(controller, {
+      channel,
+      onClose: () => {
+        closeOverview = undefined;
+        overviewButton.classList.remove('is-active');
+      },
+    });
+  });
+
   function renderBoxState(): void {
     const active = controller.isBoxVisible();
     currentSlideBox.classList.toggle('show-box', active);
@@ -199,6 +219,7 @@ export function mountPresenterView(
   return () => {
     unsubscribe();
     windows.dispose();
+    closeOverview?.();
     window.clearInterval(intervalId);
     window.clearInterval(windowsIntervalId);
   };
