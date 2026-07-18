@@ -53,6 +53,12 @@ export interface Controller {
   onWindowsChange(listener: () => void): () => void;
   /** Sets the content scale (text/zoom size) of a specific window. */
   zoomWindow(target: Window, value: number): void;
+  /**
+   * Announces this window to its opener so the opener can (re)register it. Used
+   * by controlled presentation windows so they reconnect after the presenter
+   * has been reloaded. A no-op when there is no opener.
+   */
+  announce(channel: string): void;
 }
 
 export function createController(
@@ -96,9 +102,16 @@ export function createController(
     }
   }
 
-  function handleMessage(message: SyncMessage): void {
+  function handleMessage(message: SyncMessage, source?: Window): void {
     if (message.kind === 'request-state') {
       sync.broadcast(snapshot());
+      return;
+    }
+
+    if (message.kind === 'announce') {
+      if (source) {
+        registerWindow(source, message.channel ?? 'presentation');
+      }
       return;
     }
 
@@ -172,12 +185,7 @@ export function createController(
         return;
       }
 
-      sync.register(child);
-      const name = channel ?? role;
-      const count = (channelCounts.get(name) ?? 0) + 1;
-      channelCounts.set(name, count);
-      openedWindows.push({ window: child, channel: name, label: `${name} #${count}` });
-      notifyWindows();
+      registerWindow(child, channel ?? role);
     },
     listWindows: () => {
       for (let index = openedWindows.length - 1; index >= 0; index--) {
@@ -199,6 +207,11 @@ export function createController(
     zoomWindow: (target: Window, value: number) => {
       sync.postTo(target, { kind: 'zoom', value });
     },
+    announce: (channel: string) => {
+      if (window.opener) {
+        sync.postTo(window.opener as Window, { kind: 'announce', channel });
+      }
+    },
     isBoxVisible: () => boxVisible,
     setBoxVisible: (active: boolean) => {
       if (active === boxVisible) {
@@ -208,6 +221,26 @@ export function createController(
       emit(true);
     },
   };
+
+  /**
+   * Registers a window as controlled: it starts receiving sync updates and, if
+   * not already tracked, is added to the window list and sent the current state
+   * so it catches up. Called both when opening a window and when a window
+   * (re)announces itself after the presenter has been reloaded.
+   */
+  function registerWindow(target: Window, name: string): void {
+    sync.register(target);
+
+    if (openedWindows.some((entry) => entry.window === target)) {
+      return;
+    }
+
+    const count = (channelCounts.get(name) ?? 0) + 1;
+    channelCounts.set(name, count);
+    openedWindows.push({ window: target, channel: name, label: `${name} #${count}` });
+    notifyWindows();
+    sync.postTo(target, snapshot());
+  }
 
   function notifyWindows(): void {
     for (const listener of windowListeners) {

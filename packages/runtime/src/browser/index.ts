@@ -7,6 +7,12 @@ import { mountPresentationView } from './presentationView';
 import { mountPresenterView } from './presenterView';
 
 /**
+ * How often a controlled presentation window re-announces itself to its opener.
+ * This lets the presenter re-register still-open windows after it is reloaded.
+ */
+const ANNOUNCE_INTERVAL_MS = 1000;
+
+/**
  * Browser entry point for the single-file presentation. It reads the embedded
  * markdown, parses it at runtime, and mounts the view for the current window
  * role (presentation or presenter). Both windows are driven by a shared
@@ -83,6 +89,14 @@ function start(): void {
 
   controller.onChange(writeHash);
   show(parsed.role);
+
+  // A controlled presentation window keeps announcing itself so the presenter
+  // can re-adopt it after a reload (its window handles are lost on reload, but
+  // the child still points at the presenter via `window.opener`).
+  if (connected) {
+    controller.announce(activeChannel);
+    window.setInterval(() => controller.announce(activeChannel), ANNOUNCE_INTERVAL_MS);
+  }
 }
 
 function readSource(): string {

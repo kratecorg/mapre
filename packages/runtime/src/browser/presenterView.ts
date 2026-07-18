@@ -1,4 +1,5 @@
 import { Timer } from '../core/timer';
+import type { TimerState } from '../core/timer';
 import { formatDuration } from '../core/format';
 import type { Controller, ManagedWindow } from './controller';
 import { query } from './dom';
@@ -7,6 +8,7 @@ import { createZoomControl, DEFAULT_SCALE } from './zoomControl';
 
 const TIMER_TICK_MS = 250;
 const WINDOWS_TICK_MS = 1000;
+const TIMER_STORAGE_PREFIX = 'mapre:timer:';
 
 const TEMPLATE = `
   <div class="presenter">
@@ -99,7 +101,12 @@ export function mountPresenterView(
 
   const overviewButton = query(root, '#pv-overview');
 
+  const timerStorageKey = `${TIMER_STORAGE_PREFIX}${controller.deck.metadata.title ?? ''}`;
   const timer = new Timer();
+  const restoredTimer = loadTimerState(timerStorageKey);
+  if (restoredTimer) {
+    timer.restore(restoredTimer);
+  }
 
   function renderPreview(): void {
     const { navigation, deck } = controller;
@@ -152,10 +159,12 @@ export function mountPresenterView(
   previousButton.addEventListener('click', () => controller.previous());
   toggleButton.addEventListener('click', () => {
     timer.toggle();
+    saveTimerState(timerStorageKey, timer.getState());
     renderTimer();
   });
   query(root, '#pv-reset').addEventListener('click', () => {
     timer.reset();
+    saveTimerState(timerStorageKey, timer.getState());
     renderTimer();
   });
 
@@ -223,6 +232,44 @@ export function mountPresenterView(
     window.clearInterval(intervalId);
     window.clearInterval(windowsIntervalId);
   };
+}
+
+/**
+ * Loads a persisted timer state, tolerating storage being unavailable (e.g. some
+ * `file://` contexts) or the payload being malformed.
+ */
+function loadTimerState(key: string): TimerState | undefined {
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) {
+      return undefined;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<TimerState>;
+    if (
+      typeof parsed.running !== 'boolean' ||
+      typeof parsed.accumulatedMs !== 'number' ||
+      typeof parsed.startedAt !== 'number'
+    ) {
+      return undefined;
+    }
+
+    return { running: parsed.running, accumulatedMs: parsed.accumulatedMs, startedAt: parsed.startedAt };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Persists the timer state so it survives a presenter reload. Failures are
+ * swallowed because the timer must keep working even without storage.
+ */
+function saveTimerState(key: string, state: TimerState): void {
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(state));
+  } catch {
+    // Storage may be unavailable; the timer still works in-memory.
+  }
 }
 
 /**

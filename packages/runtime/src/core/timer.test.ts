@@ -80,4 +80,40 @@ describe('Timer', () => {
     timer.toggle();
     expect(timer.isRunning).toBe(false);
   });
+
+  it('restores a paused state', () => {
+    const clock = fakeClock();
+    const timer = new Timer(clock.now);
+
+    timer.restore({ running: false, accumulatedMs: 2000, startedAt: 0 });
+
+    expect(timer.isRunning).toBe(false);
+    expect(timer.elapsedMs()).toBe(2000);
+  });
+
+  it('keeps advancing a restored running timer across the stored gap', () => {
+    const clock = fakeClock();
+    clock.advance(10000);
+    const timer = new Timer(clock.now);
+
+    // Simulates a reload: the timer was started 3s ago and stays running.
+    timer.restore({ running: true, accumulatedMs: 0, startedAt: 7000 });
+
+    expect(timer.isRunning).toBe(true);
+    expect(timer.elapsedMs()).toBe(3000);
+  });
+
+  it('round-trips its state via getState/restore', () => {
+    const clock = fakeClock();
+    const source = new Timer(clock.now);
+    source.start();
+    clock.advance(1200);
+    source.pause();
+
+    const target = new Timer(clock.now);
+    target.restore(source.getState());
+
+    expect(target.isRunning).toBe(false);
+    expect(target.elapsedMs()).toBe(1200);
+  });
 });

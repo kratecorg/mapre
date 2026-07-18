@@ -87,7 +87,11 @@ Wünschenswert (eigene Ergänzungen):
 - Aktionen: Start, Pause, Reset.
 - Optionale **Zieldauer** pro Vortrag; visuelle Warnung bei Annäherung/Überschreitung
   (z. B. Farbwechsel).
-- Timer läuft im Presenter Window; Zustand überlebt einen Reload (siehe §7).
+- Timer läuft im Presenter Window; sein Zustand überlebt einen Reload (siehe §7).
+  Der Referent kann die Folien neu laden (z. B. nach Änderungen), ohne die
+  laufende Zeit zu verlieren; eine laufende Stoppuhr zählt über die Reload-Pause
+  hinweg korrekt weiter. **Status: Stoppuhr inkl. Reload-Persistenz
+  implementiert; Countdown und Zieldauer offen.**
 - Optional: **Slot-/Kapitel-Zeiten** je Folienbereich (Soll-Ist-Abgleich).
   *(Offen: erst nach Basis-Timer.)*
 
@@ -216,6 +220,23 @@ Muss in **allen drei** Deploy-Varianten (§7) funktionieren, inkl. `file://`:
   bei Verbindungsverlust re-synchronisieren, Presentation Window fordert beim
   Öffnen den aktuellen Vollzustand an (Handshake).
 
+### 6.2 Wiederverbindung nach Presenter-Reload
+
+Wird das Presenter Window neu geladen (z. B. um Folienänderungen zu übernehmen),
+gehen dessen Fenster-Referenzen verloren; die geöffneten Presentation Windows
+bleiben jedoch offen und behalten ihre `window.opener`-Referenz auf den (nun neu
+geladenen) Presenter. Damit der Presenter seine Fenster nicht „vergisst“:
+
+- Jedes gesteuerte Presentation Window meldet sich periodisch bei seinem Opener
+  (Heartbeat/`announce`, inkl. seines Kanals).
+- Der Presenter registriert ein sich meldendes Fenster erneut, nimmt es wieder in
+  seine Fensterliste auf und synchronisiert es sofort auf den aktuellen Zustand.
+- So werden nach einem Reload noch offene Presentation Windows automatisch wieder
+  adoptiert und folgen erneut der Navigation.
+
+**Status: implementiert** (`postMessage`-basiert, funktioniert auch unter
+`file://`).
+
 ## 7. Deploy-Varianten
 
 Die Runtime muss identisch in drei Auslieferungsformen laufen:
@@ -240,7 +261,11 @@ Konsequenzen:
 - **Deep-Link**: aktuelle Folie (und optional Fragment) im URL-Hash, damit
   Reload/Teilen an derselben Stelle fortsetzt (z. B. `#/3/2`).
 - **Wiederaufnahme**: Timer- und Navigationszustand nach Reload wiederherstellen,
-  soweit die Deploy-Variante Persistenz erlaubt.
+  soweit die Deploy-Variante Persistenz erlaubt. Die Folien-/Fragment-Position
+  wird über den URL-Hash wiederhergestellt; der Timer-Zustand über
+  `sessionStorage` (mit Toleranz, falls Storage — etwa unter `file://` — nicht
+  verfügbar ist). Der Presenter verbindet sich zudem nach einem Reload wieder mit
+  noch offenen Presentation Windows (siehe §6.2). **Status: implementiert.**
 
 ## 9. Rendering & Darstellung
 
