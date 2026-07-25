@@ -1,3 +1,4 @@
+import type { DeckSourceSegment } from '@mapre/core';
 import { STYLES } from './styles';
 
 /**
@@ -8,6 +9,12 @@ export interface AssembleSingleFileHtmlParams {
   title: string;
   /** Raw deck markdown to embed and render in the browser at runtime. */
   markdown: string;
+  /**
+   * Optional multi-level source tree. When given, the whole tree (trunk plus all
+   * detail branches) is embedded instead of the plain markdown, so the browser
+   * can rebuild the multi-level deck without filesystem access.
+   */
+  sourceTree?: DeckSourceSegment;
   /** The bundled browser client as JavaScript source (parser + renderer). */
   clientScript: string;
   /** Optional style override; defaults to the built-in {@link STYLES}. */
@@ -41,7 +48,9 @@ export interface AssembleSingleFileHtmlParams {
 export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): string {
   const { title, markdown, clientScript } = params;
   const styles = params.styles ?? STYLES;
-  const source = serializeSource(markdown);
+  const source = params.sourceTree
+    ? serializeJson(params.sourceTree)
+    : serializeSource(markdown);
   const authorStyles = renderAuthorStyles(params.extraStyles);
   const templates = serializeJson(params.templates ?? {});
 

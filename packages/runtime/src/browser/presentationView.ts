@@ -79,8 +79,9 @@ export function mountPresentationView(
     if (options.connected) {
       return;
     }
-    const { navigation, deck } = controller;
-    query(root, '#counter').textContent = `${navigation.slideIndex + 1} / ${deck.slides.length}`;
+    const { navigation, nodes, trunkCount } = controller;
+    const label = nodes[navigation.slideIndex]?.pathLabel ?? String(navigation.slideIndex + 1);
+    query(root, '#counter').textContent = `${label} / ${trunkCount}`;
     query<HTMLButtonElement>(root, '#prev').disabled = navigation.isFirst;
     query<HTMLButtonElement>(root, '#next').disabled = navigation.isLast;
   }

@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, parse, resolve } from 'node:path';
-import { copyResources, loadDeckSource, loadDeckStyles, loadStyleAssets } from '@mapre/node';
+import { copyResources, loadDeckSource, loadDeckStyles, loadDeckTreeSource, loadStyleAssets } from '@mapre/node';
 import { buildPrintHtml, buildSingleFileHtml, listDeckChannels } from '@mapre/runtime';
 
 /**
@@ -50,16 +50,19 @@ export function buildPresentation(options: BuildPresentationOptions): BuildResul
     throw new Error(`No markdown slides found in ${slidesDir}`);
   }
 
+  const sourceTree = loadDeckTreeSource(slidesDir);
+
   const { css, templates } = loadStyleAssets(styleDir);
   const extraStyles = combineStyles(css, loadDeckStyles(slidesDir));
-  const html = buildSingleFileHtml(markdown, { title: options.title, extraStyles, templates });
+  const html = buildSingleFileHtml(markdown, { title: options.title, sourceTree, extraStyles, templates });
 
   mkdirSync(outDir, { recursive: true });
   writeFileSync(outFile, html, 'utf8');
 
-  const channelFiles = listDeckChannels(markdown).map((channel) => {
+  const channelFiles = listDeckChannels(markdown, sourceTree).map((channel) => {
     const printHtml = buildPrintHtml(markdown, {
       channel,
+      sourceTree,
       title: options.title,
       extraStyles,
       templates,

@@ -1,4 +1,5 @@
-import { DEFAULT_CHANNEL, parseDeck } from '@mapre/core';
+import { buildDeckTree, DEFAULT_CHANNEL } from '@mapre/core';
+import type { DeckSourceSegment } from '@mapre/core';
 import { applyAspectRatio } from './aspect';
 import { createController } from './controller';
 import type { Role } from './controller';
@@ -14,25 +15,25 @@ const ANNOUNCE_INTERVAL_MS = 1000;
 
 /**
  * Browser entry point for the single-file presentation. It reads the embedded
- * markdown, parses it at runtime, and mounts the view for the current window
- * role (presentation or presenter). Both windows are driven by a shared
- * controller that keeps them in sync.
+ * deck source (a multi-level segment tree), builds it at runtime, and mounts the
+ * view for the current window role (presentation or presenter). Both windows are
+ * driven by a shared controller that keeps them in sync.
  */
 function start(): void {
-  const deck = parseDeck(readSource());
-  if (deck.slides.length === 0) {
+  const tree = buildDeckTree(readSource());
+  if (tree.slides.length === 0) {
     throw new Error('The deck has no slides.');
   }
-  if (deck.metadata.title) {
-    document.title = deck.metadata.title;
+  if (tree.metadata.title) {
+    document.title = tree.metadata.title;
   }
 
-  applyAspectRatio(document.documentElement, deck.metadata.aspect);
+  applyAspectRatio(document.documentElement, tree.metadata.aspect);
 
   const root = requireElement('app');
-  const controller = createController(deck, readTemplates());
+  const controller = createController(tree, readTemplates());
   const parsed = parseHash(location.hash);
-  const defaultChannel = deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
+  const defaultChannel = tree.metadata.defaultChannel ?? DEFAULT_CHANNEL;
   let activeChannel = parsed.channel ?? defaultChannel;
 
   // Restore the position from the URL so a reload continues where it left off.
@@ -109,12 +110,14 @@ function start(): void {
   }
 }
 
-function readSource(): string {
+function readSource(): DeckSourceSegment {
   const element = document.getElementById('mapre-source');
   if (!element || !element.textContent) {
     throw new Error('Missing embedded deck source.');
   }
-  return JSON.parse(element.textContent) as string;
+  const parsed = JSON.parse(element.textContent) as DeckSourceSegment | string;
+  // Backwards compatible: a plain markdown string embeds as a trunk-only deck.
+  return typeof parsed === 'string' ? { markdown: parsed, details: [] } : parsed;
 }
 
 /**

@@ -1,7 +1,7 @@
-import type { Deck } from '@mapre/core';
+import type { Deck, DeckTree, TreeNode } from '@mapre/core';
 import { DEFAULT_CHANNEL, renderSlide } from '@mapre/core';
 import { collectChannels } from '../core/channels';
-import { Navigation } from '../core/navigation';
+import { TreeNavigation } from '../core/treeNavigation';
 import { createSync } from './sync';
 import type { SyncMessage } from './sync';
 
@@ -38,11 +38,21 @@ export interface ManagedWindow {
  */
 export interface Controller {
   readonly deck: Deck;
-  readonly navigation: Navigation;
+  readonly navigation: TreeNavigation;
+  /** Tree links for every slide, parallel to {@link Deck.slides}. */
+  readonly nodes: readonly TreeNode[];
+  /** Whether multi-level (detail-path) navigation is enabled for this deck. */
+  readonly multiLevel: boolean;
+  /** Number of trunk (top-level) slides — the length of the main talk. */
+  readonly trunkCount: number;
   /** Channel names with the deck's default channel first, the rest sorted. */
   readonly channels: string[];
   next(): void;
   previous(): void;
+  /** Descends into the current slide's detail branch (down). */
+  enterDetail(): void;
+  /** Returns from a detail branch to its branching parent (up). */
+  exitDetail(): void;
   goToSlide(index: number): void;
   first(): void;
   last(): void;
@@ -92,11 +102,16 @@ export interface Controller {
 }
 
 export function createController(
-  deck: Deck,
+  tree: DeckTree,
   templates: Record<string, string> = {},
 ): Controller {
-  const navigation = new Navigation(deck.slides.map((slide) => slide.fragmentCount + 1));
-  const slideCount = deck.slides.length;
+  const deck: Deck = { metadata: tree.metadata, slides: tree.slides };
+  const nodes = tree.nodes;
+  const navigation = new TreeNavigation(
+    nodes,
+    tree.slides.map((slide) => slide.fragmentCount + 1),
+  );
+  const trunkCount = tree.trunkCount;
   const defaultChannel = deck.metadata.defaultChannel ?? DEFAULT_CHANNEL;
   const deckVariables = toStringRecord(deck.metadata);
   const channels = collectChannels(deck, defaultChannel);
@@ -225,7 +240,7 @@ export function createController(
       return;
     }
 
-    const move = keyToMove(event.key, navigation, slideCount);
+    const move = keyToMove(event.key, navigation);
     if (!move) {
       return;
     }
@@ -241,12 +256,17 @@ export function createController(
   const controller: Controller = {
     deck,
     navigation,
+    nodes,
+    multiLevel: tree.multiLevel,
+    trunkCount,
     channels,
     next: () => go(() => navigation.next()),
     previous: () => go(() => navigation.previous()),
+    enterDetail: () => go(() => navigation.enterDetail()),
+    exitDetail: () => go(() => navigation.exitDetail()),
     goToSlide: (index: number) => go(() => navigation.goToSlide(index)),
-    first: () => go(() => navigation.goToSlide(0)),
-    last: () => go(() => navigation.goToSlide(slideCount - 1)),
+    first: () => go(() => navigation.first()),
+    last: () => go(() => navigation.last()),
     onChange: (listener: () => void) => {
       listeners.push(listener);
       return () => {
@@ -263,8 +283,8 @@ export function createController(
         templates,
         variables: {
           ...deckVariables,
-          pageNumber: String(slideIndex + 1),
-          slideCount: String(slideCount),
+          pageNumber: nodes[slideIndex]?.pathLabel ?? String(slideIndex + 1),
+          slideCount: String(trunkCount),
         },
       }),
     openWindow: (role: Role, channel?: string) => {
@@ -437,8 +457,7 @@ function windowFeatures(): string {
 
 function keyToMove(
   key: string,
-  navigation: Navigation,
-  slideCount: number,
+  navigation: TreeNavigation,
 ): (() => boolean) | undefined {
   switch (key) {
     case 'ArrowRight':
@@ -448,10 +467,14 @@ function keyToMove(
     case 'ArrowLeft':
     case 'PageUp':
       return () => navigation.previous();
+    case 'ArrowDown':
+      return () => navigation.enterDetail();
+    case 'ArrowUp':
+      return () => navigation.exitDetail();
     case 'Home':
-      return () => navigation.goToSlide(0);
+      return () => navigation.first();
     case 'End':
-      return () => navigation.goToSlide(slideCount - 1);
+      return () => navigation.last();
     default:
       return undefined;
   }

@@ -35,6 +35,21 @@ describe('assembleSingleFileHtml', () => {
     expect(html).toContain('\\u003cscript>alert(1)\\u003c/script>');
   });
 
+  it('embeds the source tree when one is provided, so detail branches travel with the deck', () => {
+    const sourceTree = {
+      markdown: '---\nmultiLevel: true\n---\n\n# Trunk',
+      details: [{ slideLocalIndex: 0, segment: { markdown: '# Detail', details: [] } }],
+    };
+    const html = assembleSingleFileHtml({
+      title: 'Demo',
+      markdown: sourceTree.markdown,
+      sourceTree,
+      clientScript: '',
+    });
+
+    expect(html).toContain(JSON.stringify(sourceTree).replace(/</g, '\\u003c'));
+  });
+
   it('has no external references', () => {
     const html = assembleSingleFileHtml({ title: 'Demo', markdown, clientScript: '' });
 

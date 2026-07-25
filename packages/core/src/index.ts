@@ -1,4 +1,16 @@
-export type { Deck, DeckMetadata, RenderOptions, Slide, SlideMetadata } from './types';
+export type {
+  Deck,
+  DeckMetadata,
+  DeckSourceSegment,
+  DeckTree,
+  RenderOptions,
+  SegmentDetail,
+  Slide,
+  SlideMetadata,
+  TreeNode,
+} from './types';
+
+export { buildDeckTree, isMultiLevelEnabled, MULTI_LEVEL_KEY } from './tree/buildDeckTree';
 
 export { parseDeck } from './parser/parseDeck';
 export { parseSlide } from './parser/parseSlide';

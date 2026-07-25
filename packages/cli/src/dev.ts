@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, statSync, watch, type FSWatcher } from 'node:fs';
 import { createServer, type ServerResponse } from 'node:http';
-import { extname, isAbsolute, join, resolve, sep } from 'node:path';
+import { extname, isAbsolute, resolve, sep } from 'node:path';
 import { resolveDeckStylesheetPath } from '@mapre/node';
 import { buildPresentation, resolveProjectDirs, type BuildPresentationOptions } from './build';
 

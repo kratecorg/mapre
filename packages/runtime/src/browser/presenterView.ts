@@ -56,7 +56,9 @@ const TEMPLATE = `
       <div class="pv-channels" id="pv-channels"></div>
       <div class="pv-nav">
         <button id="prev" type="button" aria-label="Previous">&#9664;</button>
+        <button id="pv-exit" type="button" aria-label="Exit detail (up)">&#9650;</button>
         <span id="counter"></span>
+        <button id="pv-enter" type="button" aria-label="Enter detail (down)">&#9660;</button>
         <button id="next" type="button" aria-label="Next">&#9654;</button>
       </div>
     </footer>
@@ -107,6 +109,17 @@ export function mountPresenterView(
 
   const overviewButton = query(root, '#pv-overview');
 
+  const detailControls = controller.multiLevel
+    ? { enter: query<HTMLButtonElement>(root, '#pv-enter'), exit: query<HTMLButtonElement>(root, '#pv-exit') }
+    : undefined;
+  if (detailControls) {
+    detailControls.enter.addEventListener('click', () => controller.enterDetail());
+    detailControls.exit.addEventListener('click', () => controller.exitDetail());
+  } else {
+    query(root, '#pv-enter').remove();
+    query(root, '#pv-exit').remove();
+  }
+
   const timerStorageKey = `${TIMER_STORAGE_PREFIX}${controller.deck.metadata.title ?? ''}`;
   const timer = new Timer();
   const restoredTimer = loadTimerState(timerStorageKey);
@@ -121,10 +134,35 @@ export function mountPresenterView(
     currentBox.innerHTML = controller.render(navigation.slideIndex, navigation.stepIndex, channel);
     nextBox.innerHTML = renderNextPreview();
     notesBox.textContent = slide.notes ?? '';
-    counter.textContent = `${navigation.slideIndex + 1} / ${deck.slides.length}`;
+    counter.textContent = formatCounter();
     previousButton.disabled = navigation.isFirst;
     nextButton.disabled = navigation.isLast;
+    renderDetailControls();
     updateOverflowWarning();
+  }
+
+  /**
+   * Shows the current position. In a multi-level deck this is the hierarchical
+   * path label (e.g. `2.1`) out of the number of trunk slides; otherwise the
+   * plain slide number.
+   */
+  function formatCounter(): string {
+    const { navigation, nodes, trunkCount } = controller;
+    const label = nodes[navigation.slideIndex]?.pathLabel ?? String(navigation.slideIndex + 1);
+    return `${label} / ${trunkCount}`;
+  }
+
+  /**
+   * Reflects the detail-branch affordances: enables the down button when the
+   * current slide has a detail path and the up button when inside one.
+   */
+  function renderDetailControls(): void {
+    if (!detailControls) {
+      return;
+    }
+    const { navigation } = controller;
+    detailControls.enter.disabled = !navigation.hasDetail;
+    detailControls.exit.disabled = !navigation.canExitDetail;
   }
 
   /**
@@ -141,17 +179,19 @@ export function mountPresenterView(
 
   /**
    * Renders whatever the Next action will reveal: the next fragment of the
-   * current slide, or the start of the following slide.
+   * current slide, or the start of the following slide in the current path
+   * (which, at the end of a detail branch, is the main talk it returns to).
    */
   function renderNextPreview(): string {
-    const { navigation, deck } = controller;
-    const slide = deck.slides[navigation.slideIndex];
+    const { navigation } = controller;
+    const slide = controller.deck.slides[navigation.slideIndex];
 
     if (navigation.stepIndex < slide.fragmentCount) {
       return controller.render(navigation.slideIndex, navigation.stepIndex + 1, channel);
     }
-    if (navigation.slideIndex + 1 < deck.slides.length) {
-      return controller.render(navigation.slideIndex + 1, 0, channel);
+    const forward = navigation.peekForward();
+    if (forward !== -1) {
+      return controller.render(forward, 0, channel);
     }
     return '<em>End</em>';
   }

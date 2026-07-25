@@ -11,6 +11,73 @@ export interface Deck {
 }
 
 /**
+ * A raw markdown segment plus the detail branches that hang off its slides.
+ *
+ * This is the framework-agnostic description of a multi-level deck: the trunk is
+ * the root segment, and each {@link SegmentDetail} attaches a nested segment to
+ * one of the segment's slides. It is produced with filesystem access (see
+ * `@mapre/node`) and consumed by {@link DeckTree} building, so the same tree can
+ * be rebuilt in a browser without touching the filesystem.
+ */
+export interface DeckSourceSegment {
+  /** The concatenated markdown for this segment's slides. */
+  markdown: string;
+  /** Detail branches attached to individual slides of this segment. */
+  details: SegmentDetail[];
+}
+
+/**
+ * A detail branch attached to one slide of a {@link DeckSourceSegment}.
+ */
+export interface SegmentDetail {
+  /** Zero-based position of the branching slide within its segment. */
+  slideLocalIndex: number;
+  /** The detail branch's own segment (which may nest further details). */
+  segment: DeckSourceSegment;
+}
+
+/**
+ * A deck flattened into depth-first order, with navigation links describing the
+ * multi-level tree structure. {@link slides} holds every slide (trunk and
+ * detail) in the order they are laid out and rendered; {@link nodes} is parallel
+ * to it and carries the tree links for each slide.
+ */
+export interface DeckTree {
+  metadata: DeckMetadata;
+  slides: Slide[];
+  nodes: TreeNode[];
+  /** Whether multi-level navigation is enabled for this deck. */
+  multiLevel: boolean;
+  /** Number of trunk (top-level) slides — the length of the main talk. */
+  trunkCount: number;
+}
+
+/**
+ * Navigation and layout links for a single slide within a {@link DeckTree}. All
+ * indices refer to positions in {@link DeckTree.slides}; `-1` means "none".
+ */
+export interface TreeNode {
+  /** Position in {@link DeckTree.slides}. */
+  flatIndex: number;
+  /** Nesting depth: 0 for trunk slides, 1 for their details, and so on. */
+  depth: number;
+  /** The branching slide this detail hangs off, or `-1` for trunk slides. */
+  parent: number;
+  /** The first slide of this slide's detail branch, or `-1` when it has none. */
+  child: number;
+  /** Previous sibling in the same path, or `-1` at the path start. */
+  prevInPath: number;
+  /** Next sibling in the same path, or `-1` at the path end. */
+  nextInPath: number;
+  /** Overview row: the trunk is lane 0, each branch gets its own lane below. */
+  lane: number;
+  /** Overview column: horizontal position within the git-tree layout. */
+  column: number;
+  /** Hierarchical label for display, e.g. `2` (trunk) or `2.1.3` (nested). */
+  pathLabel: string;
+}
+
+/**
  * Deck-level key/value metadata, taken from an optional leading front matter
  * block. `title` is surfaced explicitly because most consumers need it.
  */

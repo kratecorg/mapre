@@ -43,6 +43,35 @@ describe('buildPrintHtml', () => {
     expect(pageCount).toBe(2);
   });
 
+  it('prints a multi-level source tree in depth-first order', () => {
+    const sourceTree = {
+      markdown: '---\nmultiLevel: true\n---\n\n# Trunk 1\n\n---\n\n# Trunk 2',
+      details: [{ slideLocalIndex: 0, segment: { markdown: '# Detail A\n\n---\n\n# Detail B', details: [] } }],
+    };
+    const html = buildPrintHtml(sourceTree.markdown, { sourceTree });
+
+    const pageCount = html.match(/class="print-page"/g)?.length ?? 0;
+    expect(pageCount).toBe(4);
+    // Depth-first: Trunk 1, Detail A, Detail B, Trunk 2.
+    const order = ['Trunk 1', 'Detail A', 'Detail B', 'Trunk 2'].map((text) => html.indexOf(text));
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+    expect(order.every((position) => position >= 0)).toBe(true);
+  });
+
+  it('lists channels across detail branches of a source tree', () => {
+    const sourceTree = {
+      markdown: '---\nmultiLevel: true\ndefaultChannel: de\n---\n\n# Nur DE',
+      details: [
+        {
+          slideLocalIndex: 0,
+          segment: { markdown: '[channel: de]: #\n# DE\n\n[channel: en]: #\n# EN', details: [] },
+        },
+      ],
+    };
+
+    expect(listDeckChannels(sourceTree.markdown, sourceTree)).toEqual(['de', 'en']);
+  });
+
   it('applies the deck aspect ratio to the page size', () => {
     const html = buildPrintHtml(multiChannel);
 

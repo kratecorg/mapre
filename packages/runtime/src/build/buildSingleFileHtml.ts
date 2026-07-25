@@ -1,4 +1,5 @@
 import { parseDeck } from '@mapre/core';
+import type { DeckSourceSegment } from '@mapre/core';
 import bundledClient from 'virtual:mapre-client';
 import { assembleSingleFileHtml } from './assembleSingleFileHtml';
 
@@ -8,6 +9,12 @@ const DEFAULT_TITLE = 'mapre presentation';
  * Options for {@link buildSingleFileHtml}.
  */
 export interface BuildSingleFileHtmlOptions {
+  /**
+   * Optional multi-level source tree to embed instead of the plain markdown, so
+   * the browser can rebuild the trunk plus all detail branches at runtime. The
+   * `markdown` argument should be the tree's trunk markdown (used for the title).
+   */
+  sourceTree?: DeckSourceSegment;
   /**
    * Overrides the bundled browser client. Mainly intended for tests; production
    * callers should rely on the client inlined into this package at build time.
@@ -50,6 +57,7 @@ export function buildSingleFileHtml(
   return assembleSingleFileHtml({
     title,
     markdown,
+    sourceTree: options.sourceTree,
     clientScript,
     styles: options.styles,
     extraStyles: options.extraStyles,

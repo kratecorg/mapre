@@ -286,4 +286,34 @@ export const STYLES = `
     font-size: 0.8rem;
     font-variant-numeric: tabular-nums;
   }
+
+  /*
+   * Git-style tree layout for multi-level decks: the trunk on lane 0, each
+   * detail branch on its own lane below, staggered by column. Items are placed
+   * on an explicit grid; an SVG layer draws elbow connectors between them.
+   */
+  .overview-tree {
+    --overview-col: 14rem;
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    display: grid;
+    justify-content: start;
+    align-content: start;
+    gap: 1.25rem 1rem;
+  }
+  .overview-tree .overview-item { width: var(--overview-col); }
+  .overview-connectors {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .overview-connector {
+    fill: none;
+    stroke: #475569;
+    stroke-width: 2;
+  }
 `;
