@@ -216,22 +216,7 @@ export function parseDevArgs(args: string[]): DevArgs {
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
-    if (arg === '-o' || arg === '--out') {
-      outFile = requireValue(arg, args[index + 1]);
-      index += 1;
-    } else if (arg === '-t' || arg === '--title') {
-      title = requireValue(arg, args[index + 1]);
-      index += 1;
-    } else if (arg === '--slides') {
-      slidesDir = requireValue(arg, args[index + 1]);
-      index += 1;
-    } else if (arg === '--style') {
-      styleDir = requireValue(arg, args[index + 1]);
-      index += 1;
-    } else if (arg === '--resources') {
-      resourcesDir = requireValue(arg, args[index + 1]);
-      index += 1;
-    } else if (arg === '-p' || arg === '--port') {
+    if (arg === '-p' || arg === '--port') {
       port = parsePort(requireValue(arg, args[index + 1]));
       index += 1;
     } else {

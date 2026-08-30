@@ -83,9 +83,11 @@ describe('parseDevArgs', () => {
       projectDir: '.',
       outFile: 'dist/presentation.html',
       title: undefined,
+      theme: undefined,
       slidesDir: undefined,
       styleDir: undefined,
       resourcesDir: undefined,
+      pdf: false,
       port: 4321,
     });
   });
@@ -95,9 +97,11 @@ describe('parseDevArgs', () => {
       projectDir: 'content',
       outFile: 'dist/presentation.html',
       title: undefined,
+      theme: undefined,
       slidesDir: undefined,
       styleDir: undefined,
       resourcesDir: undefined,
+      pdf: false,
       port: 5000,
     });
   });
@@ -109,9 +113,13 @@ describe('parseDevArgs', () => {
   it('accepts the build options alongside the port', () => {
     expect(parseDevArgs(['-p', '5000', '--theme', 'colorful', '-t', 'Hello'])).toEqual({
       projectDir: '.',
-      outFile: 'dist/index.html',
+      outFile: 'dist/presentation.html',
       title: 'Hello',
       theme: 'colorful',
+      slidesDir: undefined,
+      styleDir: undefined,
+      resourcesDir: undefined,
+      pdf: false,
       port: 5000,
     });
   });
