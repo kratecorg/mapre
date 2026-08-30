@@ -118,6 +118,50 @@ title: Demo
 Speaker notes for this slide.
 ```
 
+## Themes
+
+Four themes ship with mapre. A deck picks one in its front matter:
+
+```markdown
+---
+title: My Talk
+theme: high-contrast
+---
+```
+
+| Theme           | Use it for                                                     |
+| --------------- | -------------------------------------------------------------- |
+| `light`         | bright rooms, handouts, printing                                |
+| `dark`          | the default: slate background with a sky-blue accent            |
+| `high-contrast` | large rooms and weak projectors; body text meets WCAG AAA (7:1) |
+| `colorful`      | meetups and lightning talks; gradient backdrop, warm accents    |
+
+`mapre build --theme light` and `mapre dev --theme light` override the
+directive, so the same slides can be built for two different rooms. An unknown
+name fails the build and lists the valid ones. `mapre init my-talk --theme light`
+writes the directive into the scaffolded deck.
+
+### Customizing a theme
+
+The baseline styles express slide appearance through `--mapre-*` design tokens;
+a theme redeclares them on `:root`. To tweak a theme rather than replace it,
+override single tokens from your own CSS — it is inlined after the theme, so it
+wins by cascade:
+
+```css
+:root {
+  --mapre-accent: #e11d48;
+  --mapre-stage-bg: #101010;
+  --mapre-font-body: Georgia, serif;
+}
+```
+
+The cascade order is baseline → theme → `style/*.css` → the deck's `stylesheet`
+directive. Presenter chrome uses separate `--mapre-chrome-*` tokens and is not
+affected by the deck theme, so a light theme cannot make the controls unreadable.
+See [`examples/custom-theme/`](examples/custom-theme/README.md) for a full author
+stylesheet.
+
 ## Development
 
 Requires Node 20+ and pnpm.

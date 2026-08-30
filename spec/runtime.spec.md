@@ -184,7 +184,7 @@ Dieselbe Syntax wirkt je nach Position auf drei Ebenen:
 | `background`       | Folie / Kanal    | Hintergrund (Bildpfad oder Farbe) für Folie bzw. Kanal-Abschnitt | vorhanden |
 | `stylesheet`       | Deck             | Autor-CSS relativ zum Folienordner, wird ins HTML inlined (§9)  | vorhanden |
 | `template`         | Folie            | Wählt einen HTML-Folienmaster aus `style/` (§9)                 | vorhanden |
-| `theme`            | Deck / Folie     | Styling-Theme (siehe §9)                                         | offen     |
+| `theme`            | Deck             | Styling-Theme (siehe §9)                                         | vorhanden |
 | `duration`         | Folie            | Ziel-/Sollzeit in Minuten für Timer-Slots (siehe §4)            | offen     |
 | `id`               | Folie            | Benannter Anker für Deep-Linking/Sprungmarken (siehe §8)        | offen     |
 | `class`            | Folie / Kanal    | Zusätzliche CSS-Klasse(n)                                        | offen     |
@@ -302,8 +302,19 @@ Konsequenzen:
   das Theme überall gleich aussieht und die restliche Presenter-Oberfläche ihr
   eigenes Styling behält. Beispiel:
   [`examples/custom-theme/`](../examples/custom-theme/README.md). **Status: implementiert.**
-- **Themes**: benannte Styling-Presets über die `theme`-Direktive.
-  *(Offen: Theme-Mechanismus als Preset-Bündel über CSS-Variablen.)*
+- **Themes**: benannte Styling-Presets über die `theme`-Direktive. Die Baseline-
+  Styles drücken das Folien-Aussehen über `--mapre-*`-Design-Tokens aus; ein
+  Theme deklariert diese Tokens auf `:root` neu. Mitgeliefert sind `light`,
+  `dark` (Default), `high-contrast` und `colorful`. Auswahl per Deck-Direktive
+  `theme: light` oder per CLI-Flag `--theme`, das die Direktive sticht; ein
+  unbekannter Name bricht den Build mit der Liste der gültigen Namen ab. Zum
+  Theme gehört auch der **Stage-Hintergrund** (`--mapre-stage-bg`), also die
+  Letterbox-Fläche um die Folie in der Publikumsansicht. Die
+  Presenter-Oberfläche hat eigene `--mapre-chrome-*`-Tokens und bleibt vom
+  Folien-Theme unberührt, damit ein helles Theme die Bedienelemente nicht
+  unlesbar macht; die Folien-Vorschauen im Presenter sind `.slide-box`-Elemente
+  und folgen dem Theme. Kaskadenreihenfolge: Baseline → Theme → `style/`-CSS →
+  `stylesheet`-Direktive. **Status: implementiert.**
 - **Folienmaster / Templates**: HTML-Dateien im `style/`-Ordner (z. B.
   `style/main-white.html`) dienen als Master. Eine Folie wählt einen per
   `[template: main-white]: #`. Der Master enthält Platzhalter: `{{content}}`

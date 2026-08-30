@@ -1,3 +1,4 @@
+import { DEFAULT_THEME, THEME_NAMES } from '@mapre/runtime';
 import { buildPresentation } from './build';
 import { startDevServer } from './dev';
 import { generateChannelPdfs } from './pdf';
@@ -19,6 +20,7 @@ export interface BuildArgs {
   projectDir: string;
   outFile: string;
   title?: string;
+  theme?: string;
   slidesDir?: string;
   styleDir?: string;
   resourcesDir?: string;
@@ -28,13 +30,7 @@ export interface BuildArgs {
 /**
  * Parsed options for the `dev` command.
  */
-export interface DevArgs {
-  projectDir: string;
-  outFile: string;
-  title?: string;
-  slidesDir?: string;
-  styleDir?: string;
-  resourcesDir?: string;
+export interface DevArgs extends BuildArgs {
   port: number;
 }
 
@@ -44,6 +40,7 @@ export interface DevArgs {
 export interface InitArgs {
   targetDir: string;
   name?: string;
+  theme?: string;
 }
 
 const DEFAULT_PROJECT_DIR = '.';
@@ -70,9 +67,14 @@ const HELP_TEXT = [
   'can be pointed elsewhere with --slides, --style and --resources, e.g. to',
   'build several decks that share one style/ and resources/ folder.',
   '',
+  'init options:',
+  '  --name <name>        Display name for the presentation',
+  `  --theme <theme>      Theme to write into the scaffolded deck (default: ${DEFAULT_THEME})`,
+  '',
   'build options:',
   '  -o, --out <file>       Output HTML file (default: dist/presentation.html)',
   '  -t, --title <title>    Override the document title',
+  '      --theme <theme>  Override the deck theme',
   '  --slides <dir>         Slides folder (default: <projectDir>/slides)',
   '  --style <dir>          Style folder (default: <projectDir>/style)',
   '  --resources <dir>      Resources folder (default: <projectDir>/resources)',
@@ -84,15 +86,17 @@ const HELP_TEXT = [
   'dev options:',
   '  -o, --out <file>       Output HTML file (default: dist/presentation.html)',
   '  -t, --title <title>    Override the document title',
+  '      --theme <theme>  Override the deck theme',
   '  --slides <dir>         Slides folder (default: <projectDir>/slides)',
   '  --style <dir>          Style folder (default: <projectDir>/style)',
   '  --resources <dir>      Resources folder (default: <projectDir>/resources)',
   '  -p, --port <port>      Port to serve on (default: 4321)',
   '',
+  `Themes: ${THEME_NAMES.join(', ')}`,
+  '',
   'Examples:',
-  '  mapre init my-talk',
+  '  mapre init my-talk --theme light',
   '  mapre build -o dist/presentation.html',
-  '  mapre build --slides slides/H18 -o dist/H18/presentation.html',
   '  mapre dev -p 4321',
 ].join('\n');
 
@@ -156,6 +160,7 @@ export function parseBuildArgs(args: string[]): BuildArgs {
   const positionals: string[] = [];
   let outFile = DEFAULT_OUT_FILE;
   let title: string | undefined;
+  let theme: string | undefined;
   let slidesDir: string | undefined;
   let styleDir: string | undefined;
   let resourcesDir: string | undefined;
@@ -168,6 +173,9 @@ export function parseBuildArgs(args: string[]): BuildArgs {
       index += 1;
     } else if (arg === '-t' || arg === '--title') {
       title = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '--theme') {
+      theme = requireValue(arg, args[index + 1]);
       index += 1;
     } else if (arg === '--slides') {
       slidesDir = requireValue(arg, args[index + 1]);
@@ -191,6 +199,7 @@ export function parseBuildArgs(args: string[]): BuildArgs {
     projectDir: positionals[0] ?? DEFAULT_PROJECT_DIR,
     outFile,
     title,
+    theme,
     slidesDir,
     styleDir,
     resourcesDir,
@@ -202,12 +211,7 @@ export function parseBuildArgs(args: string[]): BuildArgs {
  * Parses the arguments of the `dev` command: the build options plus a port.
  */
 export function parseDevArgs(args: string[]): DevArgs {
-  const positionals: string[] = [];
-  let outFile = DEFAULT_OUT_FILE;
-  let title: string | undefined;
-  let slidesDir: string | undefined;
-  let styleDir: string | undefined;
-  let resourcesDir: string | undefined;
+  const buildArgs: string[] = [];
   let port = DEFAULT_DEV_PORT;
 
   for (let index = 0; index < args.length; index += 1) {
@@ -230,22 +234,12 @@ export function parseDevArgs(args: string[]): DevArgs {
     } else if (arg === '-p' || arg === '--port') {
       port = parsePort(requireValue(arg, args[index + 1]));
       index += 1;
-    } else if (arg.startsWith('-')) {
-      throw new Error(`Unknown option: ${arg}`);
     } else {
-      positionals.push(arg);
+      buildArgs.push(arg);
     }
   }
 
-  return {
-    projectDir: positionals[0] ?? DEFAULT_PROJECT_DIR,
-    outFile,
-    title,
-    slidesDir,
-    styleDir,
-    resourcesDir,
-    port,
-  };
+  return { ...parseBuildArgs(buildArgs), port };
 }
 
 /**
@@ -258,14 +252,22 @@ function parsePort(value: string): number {
   }
   return port;
 }
+
+/**
+ * Parses the arguments of the `init` command.
+ */
 export function parseInitArgs(args: string[]): InitArgs {
   const positionals: string[] = [];
   let name: string | undefined;
+  let theme: string | undefined;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--name') {
       name = requireValue(arg, args[index + 1]);
+      index += 1;
+    } else if (arg === '--theme') {
+      theme = requireValue(arg, args[index + 1]);
       index += 1;
     } else if (arg.startsWith('-')) {
       throw new Error(`Unknown option: ${arg}`);
@@ -279,7 +281,7 @@ export function parseInitArgs(args: string[]): InitArgs {
     throw new Error('Missing target directory. Usage: mapre init <dir>');
   }
 
-  return { targetDir, name };
+  return { targetDir, name, theme };
 }
 
 function requireValue(flag: string, value: string | undefined): string {

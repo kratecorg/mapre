@@ -1,3 +1,4 @@
+import { resolveThemeStyles } from '../themes/themes';
 import type { DeckSourceSegment } from '@mapre/core';
 import { STYLES } from './styles';
 
@@ -19,6 +20,11 @@ export interface AssembleSingleFileHtmlParams {
   clientScript: string;
   /** Optional style override; defaults to the built-in {@link STYLES}. */
   styles?: string;
+  /**
+   * CSS of the selected theme, inlined after the baseline styles so its design
+   * tokens win. Defaults to the CSS of the default theme.
+   */
+  themeStyles?: string;
   /**
    * Optional author stylesheet inlined after the baseline styles, so it wins by
    * cascade order. Comes from a deck's `stylesheet` directive (see
@@ -48,6 +54,7 @@ export interface AssembleSingleFileHtmlParams {
 export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): string {
   const { title, markdown, clientScript } = params;
   const styles = params.styles ?? STYLES;
+  const themeStyles = params.themeStyles ?? resolveThemeStyles();
   const source = params.sourceTree
     ? serializeJson(params.sourceTree)
     : serializeSource(markdown);
@@ -60,7 +67,8 @@ export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): st
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(title)}</title>
-  <style>${styles}</style>${authorStyles}
+  <style>${styles}</style>
+  <style>${themeStyles}</style>${authorStyles}
 </head>
 <body>
   <div id="app"></div>

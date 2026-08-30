@@ -1,9 +1,11 @@
-import { parseDeck } from '@mapre/core';
+import { parseDeck, type Deck } from '@mapre/core';
 import type { DeckSourceSegment } from '@mapre/core';
 import bundledClient from 'virtual:mapre-client';
+import { resolveThemeStyles } from '../themes/themes';
 import { assembleSingleFileHtml } from './assembleSingleFileHtml';
 
 const DEFAULT_TITLE = 'mapre presentation';
+const THEME_DIRECTIVE = 'theme';
 
 /**
  * Options for {@link buildSingleFileHtml}.
@@ -37,6 +39,11 @@ export interface BuildSingleFileHtmlOptions {
    * or a generic fallback when none is set.
    */
   title?: string;
+  /**
+   * Overrides the theme. Defaults to the deck's front-matter `theme`, or the
+   * default theme when none is set. An unknown name throws.
+   */
+  theme?: string;
 }
 
 /**
@@ -51,7 +58,9 @@ export function buildSingleFileHtml(
   markdown: string,
   options: BuildSingleFileHtmlOptions = {},
 ): string {
-  const title = options.title ?? deriveTitle(markdown);
+  const deck = parseDeck(markdown);
+  const title = options.title ?? deriveTitle(deck);
+  const themeStyles = resolveThemeStyles(options.theme ?? deck.metadata[THEME_DIRECTIVE]);
   const clientScript = options.clientScript ?? bundledClient;
 
   return assembleSingleFileHtml({
@@ -60,6 +69,7 @@ export function buildSingleFileHtml(
     sourceTree: options.sourceTree,
     clientScript,
     styles: options.styles,
+    themeStyles,
     extraStyles: options.extraStyles,
     templates: options.templates,
   });
@@ -69,6 +79,6 @@ export function buildSingleFileHtml(
  * Derives the document title from the deck's front matter, falling back to a
  * generic title when none is present.
  */
-function deriveTitle(markdown: string): string {
-  return parseDeck(markdown).metadata.title ?? DEFAULT_TITLE;
+function deriveTitle(deck: Deck): string {
+  return deck.metadata.title ?? DEFAULT_TITLE;
 }

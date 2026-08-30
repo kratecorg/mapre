@@ -22,6 +22,8 @@ export interface BuildPresentationOptions {
   styleDir?: string;
   /** Overrides the resources folder (default: `<projectDir>/resources`). */
   resourcesDir?: string;
+  /** Overrides the theme (defaults to the deck front-matter `theme`). */
+  theme?: string;
   /** Base directory used to resolve relative paths. Defaults to `process.cwd()`. */
   cwd?: string;
 }
@@ -54,7 +56,13 @@ export function buildPresentation(options: BuildPresentationOptions): BuildResul
 
   const { css, templates } = loadStyleAssets(styleDir);
   const extraStyles = combineStyles(css, loadDeckStyles(slidesDir));
-  const html = buildSingleFileHtml(markdown, { title: options.title, sourceTree, extraStyles, templates });
+  const html = buildSingleFileHtml(markdown, {
+    title: options.title,
+    theme: options.theme,
+    sourceTree,
+    extraStyles,
+    templates,
+  });
 
   mkdirSync(outDir, { recursive: true });
   writeFileSync(outFile, html, 'utf8');

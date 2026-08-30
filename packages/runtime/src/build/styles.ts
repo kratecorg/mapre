@@ -2,19 +2,35 @@
  * Baseline styles for the single-file presentation, covering both window roles
  * (audience presentation and presenter). Kept as a string so it can be inlined
  * into the generated HTML without any external stylesheet.
+ *
+ * Slide appearance is expressed through `--mapre-*` design tokens that a theme
+ * declares on `.slide-box` (see `../themes`). Presenter chrome keeps its own
+ * tokens so a light slide theme cannot render the surrounding controls
+ * unreadable.
  */
 export const STYLES = `
-  :root { --scale: 1; --aspect-w: 16; --aspect-h: 9; }
+  :root {
+    --scale: 1;
+    --aspect-w: 16;
+    --aspect-h: 9;
+
+    --mapre-chrome-bg: #0f172a;
+    --mapre-chrome-surface: #1e293b;
+    --mapre-chrome-control-bg: #334155;
+    --mapre-chrome-fg: #e2e8f0;
+    --mapre-chrome-muted-fg: #94a3b8;
+    --mapre-chrome-accent: #38bdf8;
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: system-ui, sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
+    background: var(--mapre-chrome-bg);
+    color: var(--mapre-chrome-fg);
   }
   #app { height: 100vh; display: flex; flex-direction: column; }
   button {
-    background: #334155;
+    background: var(--mapre-chrome-control-bg);
     color: inherit;
     border: none;
     border-radius: 0.4em;
@@ -37,8 +53,11 @@ export const STYLES = `
     container-type: size;
     overflow: hidden;
     position: relative;
+    background: var(--mapre-slide-bg);
+    color: var(--mapre-slide-fg);
+    font-family: var(--mapre-font-body);
   }
-  .slide-box.show-box { outline: 2px solid #38bdf8; outline-offset: -1px; }
+  .slide-box.show-box { outline: 2px solid var(--mapre-chrome-accent); outline-offset: -1px; }
   .slide {
     position: relative;
     isolation: isolate;
@@ -46,7 +65,7 @@ export const STYLES = `
     height: 100%;
     padding: 5cqh 6cqw;
     overflow: hidden;
-    font-size: calc(var(--scale) * 4.3cqh);
+    font-size: calc(var(--scale) * var(--mapre-font-scale) * 4.3cqh);
   }
   .slide-bg {
     position: absolute;
@@ -55,23 +74,27 @@ export const STYLES = `
     background-size: cover;
     background-position: center;
   }
-  .slide h1 { color: #38bdf8; }
+  .slide h1, .slide h2, .slide h3 { color: var(--mapre-heading-fg); }
+  .slide a { color: var(--mapre-accent); }
+  .slide ul > li::marker, .slide ol > li::marker { color: var(--mapre-accent); }
+  .slide blockquote { color: var(--mapre-muted-fg); border-left: 0.15em solid var(--mapre-accent); padding-left: 0.8em; }
   .slide pre {
-    background: #1e293b;
+    background: var(--mapre-code-bg);
+    color: var(--mapre-code-fg);
     padding: 1em;
     border-radius: 0.5em;
     overflow: auto;
   }
-  .slide code { font-family: ui-monospace, monospace; }
+  .slide code { font-family: var(--mapre-font-mono); }
   .hidden-fragment { display: none; }
 
-  .token.comment, .token.prolog, .token.doctype, .token.cdata { color: #64748b; }
-  .token.punctuation { color: #94a3b8; }
-  .token.keyword, .token.boolean, .token.operator { color: #f472b6; }
-  .token.string, .token.char, .token.attr-value { color: #86efac; }
-  .token.number, .token.constant, .token.symbol { color: #fbbf24; }
-  .token.function, .token.class-name, .token.annotation { color: #7dd3fc; }
-  .token.builtin, .token.tag, .token.attr-name { color: #38bdf8; }
+  .token.comment, .token.prolog, .token.doctype, .token.cdata { color: var(--mapre-token-comment); }
+  .token.punctuation { color: var(--mapre-token-punctuation); }
+  .token.keyword, .token.boolean, .token.operator { color: var(--mapre-token-keyword); }
+  .token.string, .token.char, .token.attr-value { color: var(--mapre-token-string); }
+  .token.number, .token.constant, .token.symbol { color: var(--mapre-token-number); }
+  .token.function, .token.class-name, .token.annotation { color: var(--mapre-token-function); }
+  .token.builtin, .token.tag, .token.attr-name { color: var(--mapre-token-builtin); }
 
   /* Presentation (audience) view */
   .stage {
@@ -80,9 +103,9 @@ export const STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
     min-height: 0;
     container-type: size;
+    background: var(--mapre-stage-bg);
     position: relative;
   }
 
@@ -112,7 +135,7 @@ export const STYLES = `
     align-items: center;
     justify-content: center;
     padding: 0.75rem;
-    background: #1e293b;
+    background: var(--mapre-chrome-surface);
   }
   .zoom { display: flex; align-items: center; gap: 0.5rem; }
   .zoom-control { display: flex; align-items: center; gap: 0.4rem; }
@@ -127,7 +150,7 @@ export const STYLES = `
     font-variant-numeric: tabular-nums;
   }
   .channel-label {
-    color: #94a3b8;
+    color: var(--mapre-chrome-muted-fg);
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -156,7 +179,7 @@ export const STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #1e293b;
+    background: var(--mapre-chrome-surface);
     border-radius: 0.5rem;
     padding: 0.75rem;
     overflow: hidden;
@@ -165,7 +188,7 @@ export const STYLES = `
   }
   .pv-notes > div {
     flex: 1;
-    background: #1e293b;
+    background: var(--mapre-chrome-surface);
     border-radius: 0.5rem;
     padding: 1rem;
     overflow: auto;
@@ -179,20 +202,20 @@ export const STYLES = `
     align-items: center;
     gap: 0.4rem;
     flex-wrap: wrap;
-    background: #1e293b;
+    background: var(--mapre-chrome-surface);
     border-radius: 0.4rem;
     padding: 0.4rem 0.6rem;
   }
   .pv-window-label { flex: 1; min-width: 4rem; color: #cbd5e1; }
   .pv-window button { padding: 0.25em 0.6em; font-size: 0.85rem; }
   .pv-empty { color: #64748b; font-size: 0.85rem; }
-  .pv-stage .slide { font-size: calc(var(--pv-scale, 1) * 4.3cqh); }
+  .pv-stage .slide { font-size: calc(var(--pv-scale, 1) * var(--mapre-font-scale) * 4.3cqh); }
   .pv-notes > div { white-space: pre-wrap; }
   .pv-label {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #94a3b8;
+    color: var(--mapre-chrome-muted-fg);
     margin-bottom: 0.25rem;
   }
   .pv-overflow {
@@ -212,11 +235,11 @@ export const STYLES = `
     padding: 0.5rem 0.25rem;
   }
   .pv-timer, .pv-nav, .pv-view { display: flex; align-items: center; gap: 0.75rem; }
-  #pv-box-toggle.is-active { background: #38bdf8; color: #0f172a; }
+  #pv-box-toggle.is-active { background: var(--mapre-chrome-accent); color: var(--mapre-chrome-bg); }
   #pv-highlight.is-active { background: #38bdf8; color: #0f172a; }
   .pv-channels { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .pv-channel-view { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-  .pv-channel-view button.is-active { background: #38bdf8; color: #0f172a; }
+  .pv-channel-view button.is-active { background: var(--mapre-chrome-accent); color: var(--mapre-chrome-bg); }
   #pv-time { font-variant-numeric: tabular-nums; font-size: 1.75rem; }
   #pv-overview.is-active { background: #38bdf8; color: #0f172a; }
 

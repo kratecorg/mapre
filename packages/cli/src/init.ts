@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
+import { assertThemeExists } from '@mapre/runtime';
 import { presentationFiles } from './scaffold';
 
 /**
@@ -10,6 +11,8 @@ export interface InitPresentationOptions {
   targetDir: string;
   /** Display name for the presentation. Defaults to the directory name. */
   name?: string;
+  /** Theme written into the scaffolded deck. Defaults to the default theme. */
+  theme?: string;
   /** Base directory used to resolve relative paths. Defaults to `process.cwd()`. */
   cwd?: string;
 }
@@ -29,8 +32,14 @@ export function initPresentation(options: InitPresentationOptions): string {
     throw new Error(`Target directory already exists: ${targetDir}`);
   }
 
+  // Reject an unknown theme before any file is written, so a typo leaves no
+  // half-scaffolded folder behind.
+  if (options.theme !== undefined) {
+    assertThemeExists(options.theme);
+  }
+
   const name = options.name ?? basename(targetDir);
-  const files = presentationFiles(name);
+  const files = presentationFiles({ name, theme: options.theme });
 
   for (const [relativePath, content] of Object.entries(files)) {
     const filePath = join(targetDir, relativePath);

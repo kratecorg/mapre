@@ -73,9 +73,10 @@ describe('assembleSingleFileHtml', () => {
   });
 
   it('omits the author style element when no extra styles are given', () => {
+    // Only the baseline and the theme style elements remain.
     const html = assembleSingleFileHtml({ title: 'Demo', markdown, clientScript: '' });
 
-    expect(html.match(/<style>/g)).toHaveLength(1);
+    expect(html.match(/<style>/g)).toHaveLength(2);
   });
 
   it('neutralizes a "</style>" breakout inside author styles', () => {

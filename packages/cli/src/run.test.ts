@@ -64,6 +64,10 @@ describe('parseBuildArgs', () => {
     expect(parseBuildArgs(['--pdf']).pdf).toBe(true);
   });
 
+  it('reads a theme override', () => {
+    expect(parseBuildArgs(['--theme', 'high-contrast']).theme).toBe('high-contrast');
+  });
+
   it('rejects a missing option value', () => {
     expect(() => parseBuildArgs(['-o'])).toThrow(/Missing value for -o/);
   });
@@ -101,6 +105,20 @@ describe('parseDevArgs', () => {
   it('rejects an invalid port', () => {
     expect(() => parseDevArgs(['-p', '99999'])).toThrow(/Invalid port/);
   });
+
+  it('accepts the build options alongside the port', () => {
+    expect(parseDevArgs(['-p', '5000', '--theme', 'colorful', '-t', 'Hello'])).toEqual({
+      projectDir: '.',
+      outFile: 'dist/index.html',
+      title: 'Hello',
+      theme: 'colorful',
+      port: 5000,
+    });
+  });
+
+  it('rejects unknown options', () => {
+    expect(() => parseDevArgs(['--nope'])).toThrow(/Unknown option/);
+  });
 });
 
 describe('parseInitArgs', () => {
@@ -109,6 +127,10 @@ describe('parseInitArgs', () => {
       targetDir: 'my-talk',
       name: 'My Talk',
     });
+  });
+
+  it('reads an optional theme', () => {
+    expect(parseInitArgs(['my-talk', '--theme', 'light']).theme).toBe('light');
   });
 
   it('requires a target directory', () => {
