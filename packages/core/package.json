@@ -5,14 +5,14 @@
   "type": "module",
   "license": "MIT",
   "author": "kratec",
-  "homepage": "https://github.com/kratec/mapre#readme",
+  "homepage": "https://github.com/kratecorg/mapre#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kratec/mapre.git",
+    "url": "git+https://github.com/kratecorg/mapre.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/kratec/mapre/issues"
+    "url": "https://github.com/kratecorg/mapre/issues"
   },
   "keywords": [
     "mapre",

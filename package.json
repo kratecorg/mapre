@@ -6,13 +6,13 @@
   "description": "Reusable foundation for markdown-driven slides and presentation experiences",
   "license": "MIT",
   "author": "kratec",
-  "homepage": "https://github.com/kratec/mapre#readme",
+  "homepage": "https://github.com/kratecorg/mapre#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kratec/mapre.git"
+    "url": "git+https://github.com/kratecorg/mapre.git"
   },
   "bugs": {
-    "url": "https://github.com/kratec/mapre/issues"
+    "url": "https://github.com/kratecorg/mapre/issues"
   },
   "packageManager": "pnpm@10.28.0",
   "engines": {
