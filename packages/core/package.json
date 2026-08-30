@@ -4,6 +4,26 @@
   "description": "Framework-agnostic markdown parser and slide model for the mapre presentation stack",
   "type": "module",
   "license": "MIT",
+  "author": "kratec",
+  "homepage": "https://github.com/kratec/mapre#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kratec/mapre.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/kratec/mapre/issues"
+  },
+  "keywords": [
+    "mapre",
+    "markdown",
+    "slides",
+    "presentation",
+    "parser"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

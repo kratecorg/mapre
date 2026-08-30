@@ -1,0 +1,63 @@
+name: Bug report
+description: Report incorrect or unexpected behavior
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not report security vulnerabilities here — see [SECURITY.md](../blob/main/SECURITY.md).
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the incorrect behavior and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Ideally a minimal deck plus the commands you ran.
+      placeholder: |
+        1. mapre init my-talk --theme light
+        2. mapre build
+        3. Open dist/presentation.html
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - '@mapre/core (parser and slide model)'
+        - '@mapre/node (deck loading)'
+        - '@mapre/runtime (browser runtime and presenter)'
+        - '@mapre/cli (init, build, dev)'
+        - Themes
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: mapre version or commit
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Node version, OS, and browser
+      placeholder: Node 22.11.0, Ubuntu 24.04, Firefox 133
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output or error messages
+      render: text

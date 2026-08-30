@@ -4,6 +4,26 @@
   "description": "Node.js filesystem loader that assembles mapre decks from a slides folder",
   "type": "module",
   "license": "MIT",
+  "author": "kratec",
+  "homepage": "https://github.com/kratec/mapre#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kratec/mapre.git",
+    "directory": "packages/node"
+  },
+  "bugs": {
+    "url": "https://github.com/kratec/mapre/issues"
+  },
+  "keywords": [
+    "mapre",
+    "markdown",
+    "slides",
+    "presentation",
+    "loader"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

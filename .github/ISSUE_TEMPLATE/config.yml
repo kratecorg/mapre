@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/kratec/mapre/discussions
+    about: Ask about usage or discuss an idea before opening an issue.
+  - name: Security vulnerability
+    url: https://github.com/kratec/mapre/security/advisories/new
+    about: Report vulnerabilities privately, never as a public issue.

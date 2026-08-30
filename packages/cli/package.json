@@ -4,6 +4,27 @@
   "description": "Command-line interface for mapre: scaffold and build markdown presentations",
   "type": "module",
   "license": "MIT",
+  "author": "kratec",
+  "homepage": "https://github.com/kratec/mapre#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kratec/mapre.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/kratec/mapre/issues"
+  },
+  "keywords": [
+    "mapre",
+    "markdown",
+    "slides",
+    "presentation",
+    "cli",
+    "static-site"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "mapre": "./dist/mapre.js"
   },

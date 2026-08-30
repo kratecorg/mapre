@@ -4,6 +4,16 @@
   "private": true,
   "type": "module",
   "description": "Reusable foundation for markdown-driven slides and presentation experiences",
+  "license": "MIT",
+  "author": "kratec",
+  "homepage": "https://github.com/kratec/mapre#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kratec/mapre.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kratec/mapre/issues"
+  },
   "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": ">=20"

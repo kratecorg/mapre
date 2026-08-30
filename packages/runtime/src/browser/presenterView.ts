@@ -409,44 +409,6 @@ function saveTimerState(key: string, state: TimerState): void {
 }
 
 /**
- * Loads a persisted timer state, tolerating storage being unavailable (e.g. some
- * `file://` contexts) or the payload being malformed.
- */
-function loadTimerState(key: string): TimerState | undefined {
-  try {
-    const raw = window.sessionStorage.getItem(key);
-    if (!raw) {
-      return undefined;
-    }
-
-    const parsed = JSON.parse(raw) as Partial<TimerState>;
-    if (
-      typeof parsed.running !== 'boolean' ||
-      typeof parsed.accumulatedMs !== 'number' ||
-      typeof parsed.startedAt !== 'number'
-    ) {
-      return undefined;
-    }
-
-    return { running: parsed.running, accumulatedMs: parsed.accumulatedMs, startedAt: parsed.startedAt };
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * Persists the timer state so it survives a presenter reload. Failures are
- * swallowed because the timer must keep working even without storage.
- */
-function saveTimerState(key: string, state: TimerState): void {
-  try {
-    window.sessionStorage.setItem(key, JSON.stringify(state));
-  } catch {
-    // Storage may be unavailable; the timer still works in-memory.
-  }
-}
-
-/**
  * Renders the list of open windows, adding and removing rows as windows open and
  * close so that in-progress input (e.g. a typed size) is never clobbered. Each
  * row can resize, focus, or close its window.
