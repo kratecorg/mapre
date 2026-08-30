@@ -42,23 +42,23 @@ describe('buildPresentation', () => {
   });
 
   it('honors per-folder overrides and copies resources next to the output', () => {
-    const h18Slides = join(root, 'slides', 'H18');
+    const roomSlides = join(root, 'slides', 'room-a');
     const sharedResources = join(root, 'resources');
-    const h18Out = join(root, 'dist', 'H18', 'index.html');
-    mkdirSync(h18Slides, { recursive: true });
+    const roomOut = join(root, 'dist', 'room-a', 'index.html');
+    mkdirSync(roomSlides, { recursive: true });
     mkdirSync(sharedResources, { recursive: true });
-    writeFileSync(join(h18Slides, '01.md'), '# H18');
+    writeFileSync(join(roomSlides, '01.md'), '# Room A');
     writeFileSync(join(sharedResources, 'logo.png'), 'logo-bytes');
 
     buildPresentation({
       projectDir: root,
-      outFile: h18Out,
-      slidesDir: h18Slides,
+      outFile: roomOut,
+      slidesDir: roomSlides,
       resourcesDir: sharedResources,
     });
 
-    expect(existsSync(h18Out)).toBe(true);
-    const copied = join(dirname(h18Out), 'resources', 'logo.png');
+    expect(existsSync(roomOut)).toBe(true);
+    const copied = join(dirname(roomOut), 'resources', 'logo.png');
     expect(readFileSync(copied, 'utf8')).toBe('logo-bytes');
   });
 });

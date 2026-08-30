@@ -41,19 +41,19 @@ describe('parseBuildArgs', () => {
     expect(
       parseBuildArgs([
         '--slides',
-        'slides/H18',
+        'slides/room-a',
         '--style',
         'style',
         '--resources',
         'resources',
         '-o',
-        'dist/H18/index.html',
+        'dist/room-a/index.html',
       ]),
     ).toEqual({
       projectDir: '.',
-      outFile: 'dist/H18/index.html',
+      outFile: 'dist/room-a/index.html',
       title: undefined,
-      slidesDir: 'slides/H18',
+      slidesDir: 'slides/room-a',
       styleDir: 'style',
       resourcesDir: 'resources',
       pdf: false,
