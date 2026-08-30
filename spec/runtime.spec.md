@@ -51,6 +51,9 @@ Mindestanforderung:
   (Reveal-Schritt), Sprung zu erster/letzter Folie, Sprung zu Foliennummer.
 - **Zoom Presenter-Vorschau**: Vergrößern/Verkleinern der Vorschaufolien im
   Presenter Window (beeinflusst nur die Presenter-Ansicht).
+- **Presenter-Oberfläche hell/dunkel**: Umschalter für die Chrome des Presenter
+  Windows (Leisten, Notizen-Panel, Buttons). Wirkt nur lokal, lässt das
+  Folien-Theme unberührt und wird in `localStorage` gemerkt (Default: dunkel).
 - **Zoom Presentation**: Vergrößern/Verkleinern des Folieninhalts in den
   Presentation Windows (beeinflusst die Publikumsansicht; wird an alle
   Presentation Windows propagiert).
@@ -313,7 +316,9 @@ Konsequenzen:
   Presenter-Oberfläche hat eigene `--mapre-chrome-*`-Tokens und bleibt vom
   Folien-Theme unberührt, damit ein helles Theme die Bedienelemente nicht
   unlesbar macht; die Folien-Vorschauen im Presenter sind `.slide-box`-Elemente
-  und folgen dem Theme. Kaskadenreihenfolge: Baseline → Theme → `style/`-CSS →
+  und folgen dem Theme. Die Chrome ist im Presenter zur Laufzeit zwischen dunkel
+  und hell umschaltbar (§3), realisiert über die Klasse `chrome-light` auf
+  `:root`. Kaskadenreihenfolge: Baseline → Theme → `style/`-CSS →
   `stylesheet`-Direktive. **Status: implementiert.**
 - **Folienmaster / Templates**: HTML-Dateien im `style/`-Ordner (z. B.
   `style/main-white.html`) dienen als Master. Eine Folie wählt einen per

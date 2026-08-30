@@ -1,6 +1,14 @@
 import { Timer } from '../core/timer';
 import type { TimerState } from '../core/timer';
 import { formatDuration } from '../core/format';
+import {
+  CHROME_APPEARANCES,
+  DEFAULT_CHROME_APPEARANCE,
+  applyChromeAppearance,
+  readChromeAppearance,
+  writeChromeAppearance,
+  type ChromeAppearance,
+} from './chromeAppearance';
 import type { Controller, ManagedWindow } from './controller';
 import { query } from './dom';
 import { mountOverview } from './overview';
@@ -10,6 +18,11 @@ import { createZoomControl, DEFAULT_SCALE } from './zoomControl';
 const TIMER_TICK_MS = 250;
 const WINDOWS_TICK_MS = 1000;
 const TIMER_STORAGE_PREFIX = 'mapre:timer:';
+
+const APPEARANCE_LABELS: Record<ChromeAppearance, string> = {
+  dark: 'Dark',
+  light: 'Light',
+};
 
 const TEMPLATE = `
   <div class="presenter">
@@ -51,6 +64,7 @@ const TEMPLATE = `
         <button id="pv-overview" type="button">Overview</button>
         <button id="pv-box-toggle" type="button" aria-pressed="false">Box</button>
         <button id="pv-highlight" type="button" aria-pressed="false">Highlight</button>
+        <span class="pv-appearance" id="pv-appearance"></span>
       </div>
       <div class="pv-channel-view" id="pv-channel-view"></div>
       <div class="pv-channels" id="pv-channels"></div>
@@ -263,6 +277,15 @@ export function mountPresenterView(
 
   mountChannelButtons(query(root, '#pv-channels'), controller);
 
+  const appearanceSwitch = mountAppearanceSwitch(query(root, '#pv-appearance'), (selected) => {
+    applyChromeAppearance(document.documentElement, selected);
+    writeChromeAppearance(selected);
+    appearanceSwitch.setActive(selected);
+  });
+  const appearance = readChromeAppearance();
+  applyChromeAppearance(document.documentElement, appearance);
+  appearanceSwitch.setActive(appearance);
+
   const channelSwitch = mountChannelSwitch(query(root, '#pv-channel-view'), controller, (selected) => {
     if (selected === channel) {
       return;
@@ -298,7 +321,91 @@ export function mountPresenterView(
     closeOverview?.();
     window.clearInterval(intervalId);
     window.clearInterval(windowsIntervalId);
+    // The audience view shares this document when the role is switched in place,
+    // so the presenter's chrome choice must not follow it there.
+    applyChromeAppearance(document.documentElement, DEFAULT_CHROME_APPEARANCE);
   };
+}
+
+/**
+ * A mounted appearance switch, exposing a way to reflect the active choice in
+ * the button highlight.
+ */
+interface AppearanceSwitch {
+  setActive(appearance: ChromeAppearance): void;
+}
+
+/**
+ * Adds buttons that switch the presenter chrome between dark and light. This is
+ * local to the presenter window: it never reaches the audience windows and
+ * leaves the deck theme alone.
+ */
+function mountAppearanceSwitch(
+  container: HTMLElement,
+  onSelect: (appearance: ChromeAppearance) => void,
+): AppearanceSwitch {
+  const label = document.createElement('span');
+  label.className = 'pv-label';
+  label.textContent = 'UI';
+  container.appendChild(label);
+
+  const buttons = new Map<ChromeAppearance, HTMLButtonElement>();
+  for (const appearance of CHROME_APPEARANCES) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = APPEARANCE_LABELS[appearance];
+    button.addEventListener('click', () => onSelect(appearance));
+    buttons.set(appearance, button);
+    container.appendChild(button);
+  }
+
+  return {
+    setActive(active: ChromeAppearance): void {
+      for (const [appearance, button] of buttons) {
+        const isActive = appearance === active;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      }
+    },
+  };
+}
+
+/**
+ * Loads a persisted timer state, tolerating storage being unavailable (e.g. some
+ * `file://` contexts) or the payload being malformed.
+ */
+function loadTimerState(key: string): TimerState | undefined {
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) {
+      return undefined;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<TimerState>;
+    if (
+      typeof parsed.running !== 'boolean' ||
+      typeof parsed.accumulatedMs !== 'number' ||
+      typeof parsed.startedAt !== 'number'
+    ) {
+      return undefined;
+    }
+
+    return { running: parsed.running, accumulatedMs: parsed.accumulatedMs, startedAt: parsed.startedAt };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Persists the timer state so it survives a presenter reload. Failures are
+ * swallowed because the timer must keep working even without storage.
+ */
+function saveTimerState(key: string, state: TimerState): void {
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(state));
+  } catch {
+    // Storage may be unavailable; the timer still works in-memory.
+  }
 }
 
 /**

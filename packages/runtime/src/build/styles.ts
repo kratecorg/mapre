@@ -20,6 +20,22 @@ export const STYLES = `
     --mapre-chrome-fg: #e2e8f0;
     --mapre-chrome-muted-fg: #94a3b8;
     --mapre-chrome-accent: #38bdf8;
+    --mapre-chrome-warning-fg: #f59e0b;
+  }
+
+  /*
+   * Light presenter chrome, toggled from the presenter view. Only the chrome
+   * tokens change; the slide theme is untouched, so the previews keep looking
+   * exactly like the audience windows.
+   */
+  :root.chrome-light {
+    --mapre-chrome-bg: #eef1f5;
+    --mapre-chrome-surface: #ffffff;
+    --mapre-chrome-control-bg: #dbe1e9;
+    --mapre-chrome-fg: #1f2933;
+    --mapre-chrome-muted-fg: #5a6672;
+    --mapre-chrome-accent: #1a5fa0;
+    --mapre-chrome-warning-fg: #b45309;
   }
   * { box-sizing: border-box; }
   body {
@@ -206,9 +222,9 @@ export const STYLES = `
     border-radius: 0.4rem;
     padding: 0.4rem 0.6rem;
   }
-  .pv-window-label { flex: 1; min-width: 4rem; color: #cbd5e1; }
+  .pv-window-label { flex: 1; min-width: 4rem; color: var(--mapre-chrome-fg); }
   .pv-window button { padding: 0.25em 0.6em; font-size: 0.85rem; }
-  .pv-empty { color: #64748b; font-size: 0.85rem; }
+  .pv-empty { color: var(--mapre-chrome-muted-fg); font-size: 0.85rem; }
   .pv-stage .slide { font-size: calc(var(--pv-scale, 1) * var(--mapre-font-scale) * 4.3cqh); }
   .pv-notes > div { white-space: pre-wrap; }
   .pv-label {
@@ -221,7 +237,7 @@ export const STYLES = `
   .pv-overflow {
     display: none;
     margin-left: 0.5em;
-    color: #f59e0b;
+    color: var(--mapre-chrome-warning-fg);
     font-weight: 700;
     letter-spacing: 0;
     text-transform: none;
@@ -235,11 +251,16 @@ export const STYLES = `
     padding: 0.5rem 0.25rem;
   }
   .pv-timer, .pv-nav, .pv-view { display: flex; align-items: center; gap: 0.75rem; }
-  #pv-box-toggle.is-active { background: var(--mapre-chrome-accent); color: var(--mapre-chrome-bg); }
+  .pv-appearance { display: flex; align-items: center; gap: 0.5rem; }
   #pv-highlight.is-active { background: #38bdf8; color: #0f172a; }
   .pv-channels { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .pv-channel-view { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-  .pv-channel-view button.is-active { background: var(--mapre-chrome-accent); color: var(--mapre-chrome-bg); }
+  #pv-box-toggle.is-active,
+  .pv-channel-view button.is-active,
+  .pv-appearance button.is-active {
+    background: var(--mapre-chrome-accent);
+    color: var(--mapre-chrome-bg);
+  }
   #pv-time { font-variant-numeric: tabular-nums; font-size: 1.75rem; }
   #pv-overview.is-active { background: #38bdf8; color: #0f172a; }
 
