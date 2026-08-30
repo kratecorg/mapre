@@ -63,6 +63,28 @@ describe('renderSlide', () => {
     expect(renderSlide(slide)).toContain('<span class="red">rot</span>');
   });
 
+  it('turns column markers into a grid region with markdown inside', () => {
+    const slide = parseSlide('# Title\n\n<!-- column -->\n\n- a\n\n<!-- column -->\n\n- b', 0);
+
+    const html = renderSlide(slide);
+
+    expect(html).toContain('<div class="columns" style="--columns-tracks:repeat(2');
+    expect(html.match(/<div class="column">/g)).toHaveLength(2);
+    expect(html).toContain('<li>a</li>');
+  });
+
+  it('applies the columns directives of the slide', () => {
+    const slide = parseSlide(
+      '[columns: 2:1]: #\n[columns-align: center]: #\n\n<!-- column -->\na\n<!-- column -->\nb',
+      0,
+    );
+
+    const html = renderSlide(slide);
+
+    expect(html).toContain('--columns-tracks:minmax(0, 2fr) minmax(0, 1fr)');
+    expect(html).toContain('--columns-align:center');
+  });
+
   it('prepends an image background layer for the background directive', () => {
     const slide = parseSlide('[background: bg.png]: #\n\n# Hi', 0);
 

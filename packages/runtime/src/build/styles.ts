@@ -104,6 +104,22 @@ export const STYLES = `
   .slide code { font-family: var(--mapre-font-mono); }
   .hidden-fragment { display: none; }
 
+  /*
+   * Column regions produced by the \`column\` markers. The track list is computed
+   * by the renderer and handed over as a custom property; \`minmax(0, …)\` and
+   * \`min-width: 0\` keep a wide child such as a code block from stretching its
+   * column beyond the slide.
+   */
+  .columns {
+    display: grid;
+    grid-template-columns: var(--columns-tracks, repeat(2, minmax(0, 1fr)));
+    gap: var(--mapre-columns-gap, 4cqw);
+    align-items: var(--columns-align, start);
+  }
+  .column { min-width: 0; }
+  .column > :first-child { margin-block-start: 0; }
+  .column > :last-child { margin-block-end: 0; }
+
   .token.comment, .token.prolog, .token.doctype, .token.cdata { color: var(--mapre-token-comment); }
   .token.punctuation { color: var(--mapre-token-punctuation); }
   .token.keyword, .token.boolean, .token.operator { color: var(--mapre-token-keyword); }

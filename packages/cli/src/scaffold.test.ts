@@ -9,6 +9,7 @@ describe('presentationFiles', () => {
       '.gitignore',
       'slides/01-intro.md',
       'slides/02-agenda.md',
+      'slides/03-columns.md',
     ]);
   });
 

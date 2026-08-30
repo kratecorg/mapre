@@ -1,3 +1,5 @@
+import { protectCode } from './protectCode';
+
 /**
  * Lightweight authoring markup that layers CSS-class hooks onto markdown,
  * without touching code spans or fenced code blocks.
@@ -21,34 +23,6 @@
 export function applyMarkup(markdown: string): string {
   const { text, restore } = protectCode(markdown);
   return restore(applyClassMarkup(text));
-}
-
-const PLACEHOLDER_PREFIX = '\u0000';
-const PLACEHOLDER_SUFFIX = '\u0001';
-
-/**
- * Replaces fenced code blocks and inline code with single-token placeholders so
- * the markup transforms never rewrite anything inside code. Returns the masked
- * text and a function that restores the originals.
- */
-function protectCode(markdown: string): { text: string; restore: (text: string) => string } {
-  const store: string[] = [];
-  const stash = (match: string): string => {
-    const index = store.length;
-    store.push(match);
-    return `${PLACEHOLDER_PREFIX}${index}${PLACEHOLDER_SUFFIX}`;
-  };
-
-  let text = markdown.replace(/```[\s\S]*?```/g, stash);
-  text = text.replace(/`[^`\n]*`/g, stash);
-
-  const restore = (value: string): string =>
-    value.replace(
-      new RegExp(`${PLACEHOLDER_PREFIX}(\\d+)${PLACEHOLDER_SUFFIX}`, 'g'),
-      (_match, index: string) => store[Number(index)],
-    );
-
-  return { text, restore };
 }
 
 const CLASS_RUN_PATTERN = /^(?:\.[-\w]+)+/;

@@ -101,6 +101,9 @@ The `@mapre/core` parser understands a small, reveal.js-inspired markdown dialec
   comments, e.g. `<!-- layout: center -->` or `<!-- aspect: 16:9 -->`.
 - **Progressive-reveal fragments**: `@N ... @N` marker pairs reveal content at
   step `N`, both in prose and inside code fences.
+- **Columns**: a `<!-- column -->` line starts a column; the first one opens a
+  column region, so anything above it keeps the full width. See
+  [Columns](#columns).
 
 ```markdown
 ---
@@ -117,6 +120,53 @@ title: Demo
 ???
 Speaker notes for this slide.
 ```
+
+## Columns
+
+Multi-column slides need no CSS of their own. Every column is introduced by a
+flat marker line — `<!-- column -->` or the CommonMark form `[column]: #` — and
+the first marker opens the column region:
+
+```markdown
+# What the tool must support
+
+<!-- column -->
+
+**What an ORM offers**
+
+- an object graph across half the context
+
+<!-- column -->
+
+**What jOOQ offers**
+
+- type-safe SQL, visible in the code
+```
+
+The region runs to the end of the slide, or to an `<!-- end-columns -->` line when
+something should follow at full width again. A slide may hold several regions.
+
+Both directive forms work everywhere. `[column]: #` is a CommonMark link
+reference definition: because the label is never referenced as a link, a
+conforming renderer emits nothing for it, so the marker also stays invisible in a
+plain markdown preview. Note that markdownlint reports unused definitions
+(rule MD053) — disable it for slide folders.
+
+Two slide directives tune a slide's regions:
+
+| Directive         | Values                                                        |
+| ----------------- | ------------------------------------------------------------- |
+| `columns`         | `3`, `2:1`, `2fr 1fr`, `60% 40%`, `auto 1fr` (default: equal)  |
+| `columns-align`   | `top` (default), `center`, `bottom`, `stretch`                 |
+
+```markdown
+<!-- columns: 2fr 1fr -->
+<!-- columns-align: center -->
+```
+
+The gap comes from the theme token `--mapre-columns-gap`. Markers inside fenced
+code blocks are left alone, and a `@N` fragment region must stay within a single
+column.
 
 ## Themes
 

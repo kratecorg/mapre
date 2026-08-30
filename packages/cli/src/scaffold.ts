@@ -20,6 +20,7 @@ export function presentationFiles(options: ScaffoldOptions): Record<string, stri
     '.gitignore': 'dist\n',
     'slides/01-intro.md': introSlide(options),
     'slides/02-agenda.md': agendaSlide(),
+    'slides/03-columns.md': columnsSlide(),
   };
 }
 
@@ -47,5 +48,24 @@ function agendaSlide(): string {
 
 ???
 Speaker notes go here.
+`;
+}
+
+function columnsSlide(): string {
+  return `## Two Columns
+
+<!-- column -->
+
+**Left**
+
+- Every column starts with a marker
+- The first marker opens the region
+
+<!-- column -->
+
+**Right**
+
+- The heading above stays full width
+- \`<!-- end-columns -->\` gives it back
 `;
 }

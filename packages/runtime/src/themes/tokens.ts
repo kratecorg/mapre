@@ -27,4 +27,5 @@ export const THEME_TOKENS = [
   '--mapre-font-body',
   '--mapre-font-mono',
   '--mapre-font-scale',
+  '--mapre-columns-gap',
 ] as const;

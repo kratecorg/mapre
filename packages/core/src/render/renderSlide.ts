@@ -5,9 +5,10 @@ import 'prismjs/components/prism-javascript.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-json.js';
-import type { RenderOptions, Slide } from '../types';
+import type { RenderOptions, Slide, SlideMetadata } from '../types';
 import { postprocessFragments, preprocessFragments } from '../parser/fragments';
 import { applyTemplate } from './applyTemplate';
+import { applyColumns, type ColumnsOptions } from './columns';
 import { applyMarkup } from './markup';
 
 marked.setOptions({ gfm: true, breaks: false });
@@ -24,7 +25,8 @@ export function renderSlide(slide: Slide, options: RenderOptions = {}): string {
   const highlight = options.highlight ?? true;
   const source = selectChannelContent(slide, options.channel);
 
-  const withMarkup = applyMarkup(source);
+  const withColumns = applyColumns(source, readColumnsOptions(slide.metadata));
+  const withMarkup = applyMarkup(withColumns);
   const withFragments = preprocessFragments(withMarkup, revealed);
   let html = marked.parse(withFragments) as string;
   html = postprocessFragments(html);
@@ -35,6 +37,10 @@ export function renderSlide(slide: Slide, options: RenderOptions = {}): string {
 
   html = wrapInTemplate(slide, html, options);
   return withBackground(slide, html, options);
+}
+
+function readColumnsOptions(metadata: SlideMetadata): ColumnsOptions {
+  return { tracks: metadata.columns, align: metadata['columns-align'] };
 }
 
 /**

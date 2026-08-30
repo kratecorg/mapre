@@ -185,6 +185,10 @@ Dieselbe Syntax wirkt je nach Position auf drei Ebenen:
 | `defaultBackground`| Deck             | Standard-Hintergrund für alle Folien                             | neu       |
 | `channel`          | Kanal-Abschnitt  | Startet einen kanalspezifischen Inhaltsabschnitt                 | neu       |
 | `background`       | Folie / Kanal    | Hintergrund (Bildpfad oder Farbe) für Folie bzw. Kanal-Abschnitt | vorhanden |
+| `columns`          | Folie            | Spaltenbreiten der Spaltenregionen (z. B. `2:1`)                 | vorhanden |
+| `columns-align`    | Folie            | vertikale Ausrichtung der Spalten (`top`…`stretch`)              | vorhanden |
+| `column`           | Content          | beginnt eine Spalte; der erste Marker öffnet die Region          | vorhanden |
+| `end-columns`      | Content          | schließt die Spaltenregion                                       | vorhanden |
 | `stylesheet`       | Deck             | Autor-CSS relativ zum Folienordner, wird ins HTML inlined (§9)  | vorhanden |
 | `template`         | Folie            | Wählt einen HTML-Folienmaster aus `style/` (§9)                 | vorhanden |
 | `theme`            | Deck             | Styling-Theme (siehe §9)                                         | vorhanden |

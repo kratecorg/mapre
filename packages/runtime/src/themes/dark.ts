@@ -23,5 +23,6 @@ export const DARK_THEME = `
     --mapre-font-body: system-ui, sans-serif;
     --mapre-font-mono: ui-monospace, monospace;
     --mapre-font-scale: 1;
+    --mapre-columns-gap: 4cqw;
   }
 `;

@@ -31,4 +31,6 @@ export {
 
 export { renderSlide } from './render/renderSlide';
 export { applyTemplate } from './render/applyTemplate';
+export { applyColumns } from './render/columns';
+export type { ColumnsOptions } from './render/columns';
 export { applyMarkup } from './render/markup';

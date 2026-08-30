@@ -23,6 +23,7 @@ export const HIGH_CONTRAST_THEME = `
     --mapre-font-body: system-ui, sans-serif;
     --mapre-font-mono: ui-monospace, monospace;
     --mapre-font-scale: 1.1;
+    --mapre-columns-gap: 5cqw;
   }
 
   .slide-box h1,
