@@ -5,12 +5,25 @@ This guide takes a deck from an empty folder to a file you can hand over.
 ## Requirements
 
 - Node 20 or newer
-- pnpm (only to build mapre itself)
+- pnpm (only if you build mapre yourself)
 
 ## Install the CLI
 
-mapre is not published to a registry yet, so you build the CLI once from the
-repository:
+mapre is not published to a registry. Every tagged release attaches a single
+self-contained `mapre.js` to the
+[releases page](https://github.com/kratecorg/mapre/releases). Download it, put
+it anywhere, and run it with Node — no install step, no `node_modules`, no
+platform-specific binary:
+
+```bash
+curl -LO https://github.com/kratecorg/mapre/releases/latest/download/mapre.js
+node mapre.js --help
+```
+
+The examples below write `mapre`; substitute `node path/to/mapre.js` when you
+work from the downloaded file.
+
+### Build from source instead
 
 ```bash
 git clone https://github.com/kratecorg/mapre.git
@@ -19,24 +32,9 @@ pnpm install
 pnpm build
 ```
 
-`pnpm build` builds all packages in dependency order and produces one
-self-contained file:
-
-```text
-packages/cli/dist/mapre.js
-```
-
-That file bundles every workspace package and its dependencies. Copy it
-anywhere and run it with Node — no `pnpm install`, no `node_modules`, no
-platform-specific binary:
-
-```bash
-node mapre.js --help
-```
-
-Inside the repository you can also run `pnpm exec mapre` from the repo root.
-The examples below write `mapre`; substitute `node path/to/mapre.js` when you
-work from a copied file.
+`pnpm build` builds all packages in dependency order and writes the same
+bundle to `packages/cli/dist/mapre.js`. Inside the repository you can then run
+`pnpm exec mapre` from the repo root.
 
 ## Scaffold a deck
 

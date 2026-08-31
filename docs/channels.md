@@ -94,5 +94,4 @@ to produce a handout per language from one source.
 - **Speaker crib** — a channel you preview in the presenter window with extra
   cues, while the audience window runs the plain one.
 
-See also: [Reference — slide directives](reference.md#slide-directives),
-[`spec/examples/multichannel/`](../spec/examples/multichannel/).
+See also: [Reference — slide directives](reference.md#slide-directives).

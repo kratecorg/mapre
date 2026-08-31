@@ -1,5 +1,6 @@
 import { resolveThemeStyles } from '../themes/themes';
 import type { DeckSourceSegment } from '@mapre/core';
+import { THIRD_PARTY_NOTICE } from './notices';
 import { STYLES } from './styles';
 
 /**
@@ -62,6 +63,9 @@ export function assembleSingleFileHtml(params: AssembleSingleFileHtmlParams): st
   const templates = serializeJson(params.templates ?? {});
 
   return `<!doctype html>
+<!--
+${THIRD_PARTY_NOTICE}
+-->
 <html lang="en">
 <head>
   <meta charset="utf-8" />

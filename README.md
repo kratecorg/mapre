@@ -111,7 +111,7 @@ This is a pnpm workspace monorepo.
 
 The design goals behind that split: keep parsing and presentation separable,
 keep the markdown layer reusable outside the app, and favour explicit module
-boundaries over one monolith. Specs live in [`spec/`](spec/).
+boundaries over one monolith.
 
 ## Contributing
 
@@ -121,3 +121,9 @@ development setup and pull request guidelines.
 ## License
 
 [MIT](LICENSE)
+
+mapre bundles [marked](https://github.com/markedjs/marked) and
+[Prism](https://github.com/PrismJS/prism) into its build artifacts. Their
+licenses are reproduced in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and travel with every
+generated presentation.

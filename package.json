@@ -1,11 +1,11 @@
 {
   "name": "mapre",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Reusable foundation for markdown-driven slides and presentation experiences",
   "license": "MIT",
-  "author": "kratec",
+  "author": "Peter Kranz (kratec GmbH)",
   "homepage": "https://github.com/kratecorg/mapre#readme",
   "repository": {
     "type": "git",

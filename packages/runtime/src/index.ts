@@ -6,6 +6,8 @@ export { formatDuration } from './core/format';
 export type { AssembleSingleFileHtmlParams } from './build/assembleSingleFileHtml';
 export { assembleSingleFileHtml } from './build/assembleSingleFileHtml';
 
+export { THIRD_PARTY_NOTICE } from './build/notices';
+
 export type { BuildSingleFileHtmlOptions } from './build/buildSingleFileHtml';
 export { buildSingleFileHtml } from './build/buildSingleFileHtml';
 

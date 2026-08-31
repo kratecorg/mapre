@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import { build as esbuild } from 'esbuild';
 import { defineConfig, type Plugin } from 'vitest/config';
 import dts from 'vite-plugin-dts';
+import { THIRD_PARTY_NOTICE } from './src/build/notices';
 
 const CLIENT_MODULE_ID = 'virtual:mapre-client';
 const RESOLVED_CLIENT_MODULE_ID = `\0${CLIENT_MODULE_ID}`;
@@ -44,6 +45,9 @@ function mapreClient(): Plugin {
 
 export default defineConfig({
   plugins: [mapreClient(), dts({ rollupTypes: true, include: ['src'] })],
+  // Vite strips comments when minifying; `eof` collects the license banner and
+  // any bundled legal comments at the end of the file instead.
+  esbuild: { legalComments: 'eof' },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
@@ -54,6 +58,11 @@ export default defineConfig({
       // Keep the core package and Node built-ins external; the browser client is
       // bundled separately by esbuild.
       external: ['@mapre/core', /^node:.*/],
+      output: {
+        // The inlined browser client carries marked and Prism, so the bundle
+        // must ship their notices.
+        banner: `/*!\n${THIRD_PARTY_NOTICE}\n*/`,
+      },
     },
   },
   test: {

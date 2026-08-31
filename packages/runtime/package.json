@@ -1,10 +1,10 @@
 {
   "name": "@mapre/runtime",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Presentation runtime for mapre: renders a deck and builds self-contained, single-file HTML presentations",
   "type": "module",
   "license": "MIT",
-  "author": "kratec",
+  "author": "Peter Kranz (kratec GmbH)",
   "homepage": "https://github.com/kratecorg/mapre#readme",
   "repository": {
     "type": "git",

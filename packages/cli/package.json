@@ -1,10 +1,10 @@
 {
   "name": "@mapre/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Command-line interface for mapre: scaffold and build markdown presentations",
   "type": "module",
   "license": "MIT",
-  "author": "kratec",
+  "author": "Peter Kranz (kratec GmbH)",
   "homepage": "https://github.com/kratecorg/mapre#readme",
   "repository": {
     "type": "git",

@@ -115,5 +115,4 @@ A `[detail: …]: #` on the very first line of the very first file is parsed as
 The loader handles that case and attaches the branch to slide 1, but it is
 easier to read when the first slide starts with content.
 
-See also: [Reference — slide directives](reference.md#slide-directives),
-[`spec/multi-level.spec.md`](../spec/multi-level.spec.md).
+See also: [Reference — slide directives](reference.md#slide-directives).
