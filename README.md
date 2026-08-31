@@ -1,270 +1,123 @@
 # mapre
 
-mapre is the main project for the presentation foundation. It is meant to host the reusable lower-level building blocks for slides and presentation experiences.
+mapre is presentation software for the browser. You write slides in markdown,
+and mapre turns them into a **single, self-contained HTML file** that runs from a
+web server, from a USB stick, or straight from `file://` — no runtime, no
+plugins, no internet connection. On top of that file you get a presenter view, a
+slide overview, a timer, and multi-window support.
 
-## Scope
+The focus is presentations. But mapre is layered, so the markdown parser and
+slide model (`@mapre/core`) are DOM-free and can be used on their own — for a
+slide preview in another app, a static site generator, or any tool that needs
+markdown turned into slides.
 
-The project has two distinct aspects:
+## The name
 
-1. Markdown parsing and slide generation
-2. Slide presentation runtime, including mirror mode and presentation mode
+**ma**rkdown + **pre**sentation = **mapre**.
 
-## Markdown parser and slide layer
+## What makes it different
 
-This part should be usable on its own. It is responsible for turning markdown into a slide-oriented representation and can be reused without the full presentation runtime.
+- **Channels** — one deck, several content variants. A slide can carry an
+  English and a German version, or a short and a long take, side by side in the
+  same file. Each window picks its own channel, so the audience screen can show
+  one language while a second screen shows another. See
+  [Channels](docs/channels.md).
+- **Very flexible reveals** — progressive reveal is not limited to list items. A
+  single `@1` line reveals everything below it; a second `@1` closes the region
+  again. A region wraps *anything*: a paragraph, a table row, a phrase in the
+  middle of a sentence, or a few lines inside a fenced code block.
+- **Detail slides** — a slide can branch into a whole sub-deck. Arrow down enters
+  the detail path, arrow up leaves it, and navigation returns to the trunk
+  automatically at the end of a branch. Ideal for material you only show when
+  someone asks. See [Detail slides](docs/detail-slides.md).
+- **Aspect ratios** — the slide box is a fixed-aspect canvas (`16:9`, `4:3`,
+  `1.85:1`, …) that letterboxes into any window. Typography scales with the box,
+  so a slide looks the same on a laptop, on a beamer, and in the PDF export.
+- **Slides across many files and folders** — a deck is a folder tree. Chapters
+  become subfolders; files and folders are sorted together alphabetically. Large
+  decks stay reviewable and mergeable.
+- **Single-file deployment** — `mapre build` inlines markdown, styles, and the
+  browser client into one HTML file. Alongside it you get one print-ready HTML
+  per channel, and with `--pdf` the PDFs as well.
+- **Presenter view with real multi-window support** — open as many audience
+  windows as you have displays, each on its own channel and zoom level. All
+  windows stay in sync and reconnect after a reload.
+- **Spotlight** — dim the slide and highlight the area under the pointer,
+  mirrored on every connected window.
+- **Invisible directives** — slide metadata uses the CommonMark link-reference
+  form `[key: value]: #`, so the source still renders cleanly in any markdown
+  preview.
 
-Typical responsibilities include:
-
-- parsing markdown into a structured intermediate model
-- mapping markdown sections to slides
-- handling slide-level metadata and layout hints
-- exposing reusable APIs for other tools or runtimes
-
-## Presentation runtime
-
-This part builds on top of the slide model and focuses on how slides are shown.
-
-Typical responsibilities include:
-
-- rendering slides in presentation mode
-- supporting mirror mode for presenter workflows
-- managing navigation and current slide state
-- handling display-specific concerns without coupling them to parsing
-
-## Design goals
-
-- Keep parsing and presentation concerns separable
-- Make the markdown layer reusable outside the full app
-- Keep the runtime flexible enough for different presentation surfaces
-- Favor clear module boundaries over a single large monolith
-
-## Repository layout
-
-This is a pnpm workspace monorepo.
-
-- `packages/core` — framework-agnostic markdown parser and slide model. It turns
-  markdown into a structured `Deck` and can render slides to HTML. It has no
-  runtime, DOM, or framework dependencies and is fully unit tested.
-- `packages/node` — Node.js filesystem loader (`@mapre/node`) that assembles a
-  deck from a `slides/` folder.
-- `packages/cli` — command-line interface (`@mapre/cli`, `mapre` binary) to
-  scaffold a new presentation (`mapre init`) and build a single-file HTML
-  presentation (`mapre build`). Its build produces a single, self-contained
-  `dist/mapre.js` that runs on any machine with Node 20+ — see
-  [Distributing the CLI](#distributing-the-cli).
-- `packages/runtime` — presentation runtime (`@mapre/runtime`). It builds a
-  **self-contained, single-file HTML** presentation: the raw deck markdown and a
-  bundled browser client (parser + renderer) are inlined, and the deck is
-  **rendered in the browser at runtime** — the same path a hosted web app uses.
-  This keeps one rendering path across all deploy targets: a hosted web server,
-  a local `python3 -m http.server`, or a plain `file://` open.
-- `examples/basic-presentation` — a runnable example showing how to author your
-  own presentation from markdown files.
-- `examples/single-file` — a runnable example that builds a single-file HTML
-  presentation with `@mapre/runtime`. For the quickest way to author your own,
-  use the `mapre` CLI (see [Distributing the CLI](#distributing-the-cli)).
-- Additional packages (presenter view, window sync, timer, channels) will live
-  under `packages/` as they are built, following the
-  [runtime spec](spec/runtime.spec.md).
-
-## Slides folder
-
-`@mapre/node`'s `loadDeck(directory)` reads a slides folder in presentation
-order:
-
-- entries are sorted **alphabetically** at every directory level;
-- **files and directories are equivalent** while sorting, so a folder named
-  `02topics/` sorts between `01.md` and `03.md`;
-- directories are entered recursively;
-- non-markdown files and dot-entries are ignored.
-
-```text
-slides/
-  01.md
-  02topics/
-    01-a.md
-    02-b.md
-  03.md
-```
-
-
-## Slide syntax
-
-The `@mapre/core` parser understands a small, reveal.js-inspired markdown dialect:
-
-- **Deck front matter**: an optional leading block delimited by `---` fences,
-  containing `key: value` pairs (e.g. `title: My Talk`).
-- **Slide separators**: a standalone `---` line splits slides. Separators inside
-  fenced code blocks are ignored.
-- **Speaker notes**: everything after a `???` line on a slide becomes notes.
-- **Slide metadata / layout hints**: leading `<!-- key: value -->` directive
-  comments, e.g. `<!-- layout: center -->` or `<!-- aspect: 16:9 -->`.
-- **Progressive-reveal fragments**: `@N ... @N` marker pairs reveal content at
-  step `N`, both in prose and inside code fences.
-- **Columns**: a `<!-- column -->` line starts a column; the first one opens a
-  column region, so anything above it keeps the full width. See
-  [Columns](#columns).
-
-```markdown
----
-title: Demo
----
-
-<!-- layout: center -->
-# Hello
-
-@1
-- revealed second
-@1
-
-???
-Speaker notes for this slide.
-```
-
-## Columns
-
-Multi-column slides need no CSS of their own. Every column is introduced by a
-flat marker line — `<!-- column -->` or the CommonMark form `[column]: #` — and
-the first marker opens the column region:
-
-```markdown
-# What the tool must support
-
-<!-- column -->
-
-**What an ORM offers**
-
-- an object graph across half the context
-
-<!-- column -->
-
-**What jOOQ offers**
-
-- type-safe SQL, visible in the code
-```
-
-The region runs to the end of the slide, or to an `<!-- end-columns -->` line when
-something should follow at full width again. A slide may hold several regions.
-
-Both directive forms work everywhere. `[column]: #` is a CommonMark link
-reference definition: because the label is never referenced as a link, a
-conforming renderer emits nothing for it, so the marker also stays invisible in a
-plain markdown preview. Note that markdownlint reports unused definitions
-(rule MD053) — disable it for slide folders.
-
-Two slide directives tune a slide's regions:
-
-| Directive         | Values                                                        |
-| ----------------- | ------------------------------------------------------------- |
-| `columns`         | `3`, `2:1`, `2fr 1fr`, `60% 40%`, `auto 1fr` (default: equal)  |
-| `columns-align`   | `top` (default), `center`, `bottom`, `stretch`                 |
-
-```markdown
-<!-- columns: 2fr 1fr -->
-<!-- columns-align: center -->
-```
-
-The gap comes from the theme token `--mapre-columns-gap`. Markers inside fenced
-code blocks are left alone, and a `@N` fragment region must stay within a single
-column.
-
-## Themes
-
-Four themes ship with mapre. A deck picks one in its front matter:
+## A slide
 
 ```markdown
 ---
 title: My Talk
-theme: high-contrast
+theme: dark
 ---
+
+# Hello
+
+- always visible
+
+@1
+- appears on the first step
+@1
+
+???
+Speaker notes, visible only in the presenter view.
 ```
 
-| Theme           | Use it for                                                     |
-| --------------- | -------------------------------------------------------------- |
-| `light`         | bright rooms, handouts, printing                                |
-| `dark`          | the default: slate background with a sky-blue accent            |
-| `high-contrast` | large rooms and weak projectors; body text meets WCAG AAA (7:1) |
-| `colorful`      | meetups and lightning talks; gradient backdrop, warm accents    |
-
-`mapre build --theme light` and `mapre dev --theme light` override the
-directive, so the same slides can be built for two different rooms. An unknown
-name fails the build and lists the valid ones. `mapre init my-talk --theme light`
-writes the directive into the scaffolded deck.
-
-### Customizing a theme
-
-The baseline styles express slide appearance through `--mapre-*` design tokens;
-a theme redeclares them on `:root`. To tweak a theme rather than replace it,
-override single tokens from your own CSS — it is inlined after the theme, so it
-wins by cascade:
-
-```css
-:root {
-  --mapre-accent: #e11d48;
-  --mapre-stage-bg: #101010;
-  --mapre-font-body: Georgia, serif;
-}
-```
-
-The cascade order is baseline → theme → `style/*.css` → the deck's `stylesheet`
-directive. Presenter chrome uses separate `--mapre-chrome-*` tokens and is not
-affected by the deck theme, so a light theme cannot make the controls unreadable.
-See [`examples/custom-theme/`](examples/custom-theme/README.md) for a full author
-stylesheet.
-
-## Development
-
-Requires Node 20+ and pnpm.
+Build it:
 
 ```bash
-pnpm install       # install workspace dependencies
-pnpm test          # run all package tests
-pnpm type-check    # type-check all packages
-pnpm build         # build all packages
-```
-
-Continuous integration runs type-check, tests, and build via Gitea Actions
-(`.gitea/workflows/ci.yml`).
-
-## Distributing the CLI
-
-The `mapre` CLI builds into a single, self-contained file that bundles every
-workspace package and its dependencies. The only requirement on the target
-machine is Node 20+ — no `pnpm install`, no `node_modules`, no platform-specific
-binary.
-
-```bash
-pnpm build                                   # builds all packages in order
-# hand over this one file:
-packages/cli/dist/mapre.js
-```
-
-Order matters because the CLI bundle inlines the built output of `@mapre/core`,
-`@mapre/node`, and `@mapre/runtime`, so those must be built first. The root
-`pnpm build` already builds packages in dependency order.
-
-On the receiving machine, run the file directly with Node:
-
-```bash
-node mapre.js init my-talk        # scaffold a presentation folder
+mapre init my-talk
 cd my-talk
-node ../mapre.js build            # write dist/presentation.html (+ one print HTML per channel)
-node ../mapre.js build --pdf      # also render each channel HTML to a PDF
+mapre dev            # preview on http://127.0.0.1:4321
+mapre build          # write dist/presentation.html
 ```
 
-The resulting `dist/presentation.html` is itself self-contained and opens from
-`file://`, a local web server, or a hosted URL. Alongside it, `build` writes one
-print-to-PDF HTML per channel (e.g. `presentation-en.html`), each laying out one
-slide per page at the deck's aspect ratio — open one and use the browser's
-Print → Save as PDF (use a Chromium-based browser such as Chrome or Edge;
-Firefox ignores the custom page size).
+## Documentation
 
-With `--pdf`, `build` also renders those channel HTML files to PDF directly, so
-no browser step is needed. It prefers a containerised Chromium (`docker`, image
-overridable via `MAPRE_CHROME_IMAGE`) and falls back to a system Chrome/Edge
-(overridable via `MAPRE_CHROME`); if neither is present it simply keeps the HTML
-files. The channel HTML files are always kept.
+- [Getting started](docs/getting-started.md) — install, scaffold, author,
+  preview, build, and hand over a deck.
+- [Reference](docs/reference.md) — every CLI command and flag, every front matter
+  key and slide directive, keyboard shortcuts, URL hashes, and the programmatic
+  API.
+- [Channels](docs/channels.md) — several content variants in one deck.
+- [Detail slides](docs/detail-slides.md) — branching a slide into a sub-deck.
+- [Theming](docs/theming.md) — built-in themes, design tokens, author
+  stylesheets, and slide templates.
 
-## Status
+## Examples
 
-This repository is intended to become the dedicated foundation for the presentation stack. The README will be refined as the module split and implementation details settle.
+| Example | Shows |
+| --- | --- |
+| [`examples/basic-presentation`](examples/basic-presentation/) | a deck with fragments, columns, and speaker notes |
+| [`examples/single-file`](examples/single-file/) | building a self-contained HTML file with `@mapre/runtime` |
+| [`examples/custom-theme`](examples/custom-theme/) | overriding design tokens from an author stylesheet |
+| [`examples/multi-level`](examples/multi-level/) | detail paths and the tree overview |
+
+## Packages
+
+This is a pnpm workspace monorepo.
+
+| Package | Purpose |
+| --- | --- |
+| `@mapre/core` | markdown parser, slide model, and HTML rendering — no DOM, no framework, usable standalone |
+| `@mapre/node` | filesystem loader that assembles a deck from a slides folder |
+| `@mapre/runtime` | browser runtime (navigation, presenter view, window sync) plus the single-file and print builders |
+| `@mapre/cli` | the `mapre` command: `init`, `dev`, `build` |
+
+The design goals behind that split: keep parsing and presentation separable,
+keep the markdown layer reusable outside the app, and favour explicit module
+boundaries over one monolith. Specs live in [`spec/`](spec/).
+
+## Contributing
+
+Requires Node 20+ and pnpm. See [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development setup and pull request guidelines.
+
+## License
+
+[MIT](LICENSE)
